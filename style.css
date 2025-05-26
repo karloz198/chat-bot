@@ -1,0 +1,417 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a2e; /* Dark blue-purple */
+    color: #e0e0e0; /* Light gray for text */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align to top for longer content */
+    min-height: 100vh; /* Minimum full viewport height */
+    padding: 20px;
+    box-sizing: border-box; /* Include padding in element's total width and height */
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    max-width: 1600px; /* Increased max-width */
+    background-color: #2a2a4a; /* Slightly lighter dark blue-purple */
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    min-height: 90vh; /* Ensure container fills vertical space */
+}
+
+.sidebar {
+    width: 300px;
+    background-color: #1a1a3e; /* Darker sidebar */
+    padding: 25px;
+    border-right: 1px solid #3a3a6a;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex-shrink: 0; /* Don't allow shrinking */
+}
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    gap: 20px;
+}
+
+h2 {
+    color: #8aff8a; /* Bright green */
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.6em;
+}
+
+h3 {
+    color: #9affff; /* Bright cyan */
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.config-section {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #3a3a6a;
+}
+
+.config-section:last-of-type {
+    border-bottom: none;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #c0c0c0;
+    font-weight: bold;
+    font-size: 0.95em;
+}
+
+input[type="text"],
+textarea,
+select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #3a3a5a;
+    border: 1px solid #5a5a7a;
+    border-radius: 5px;
+    color: #e0e0e0;
+    font-size: 0.9em;
+    resize: vertical; /* Allow vertical resizing for textareas */
+}
+
+input[type="range"] {
+    width: calc(100% - 20px);
+    margin-top: 5px;
+    margin-bottom: 10px;
+    background-color: transparent; /* Make track transparent */
+    -webkit-appearance: none; /* Remove default styling */
+    height: 8px; /* Height of the track */
+    border-radius: 5px;
+}
+
+/* Style for range slider track */
+input[type="range"]::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, #8aff8a, #4a4aff); /* Gradient track */
+    height: 8px;
+    border-radius: 5px;
+}
+
+input[type="range"]::-moz-range-track {
+    background: linear-gradient(to right, #8aff8a, #4a4aff);
+    height: 8px;
+    border-radius: 5px;
+}
+
+/* Style for range slider thumb */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: #4a4aff; /* Thumb color */
+    cursor: pointer;
+    margin-top: -5px; /* Center thumb vertically */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    border: 2px solid #e0e0e0;
+}
+
+input[type="range"]::-moz-range-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: #4a4aff;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    border: 2px solid #e0e0e0;
+}
+
+#wordLimitValue {
+    display: block;
+    text-align: right;
+    font-size: 0.85em;
+    color: #a0a0a0;
+    margin-bottom: 15px;
+}
+
+.modern-button {
+    background-color: #4a4aff; /* Bright blue */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: block; /* Make it a block element */
+    width: calc(100% - 20px); /* Full width minus padding */
+    text-align: center;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.modern-button:hover {
+    background-color: #6a6aff; /* Lighter blue on hover */
+    transform: translateY(-2px);
+}
+
+.modern-button:active {
+    transform: translateY(0);
+}
+
+.modern-button.small-button {
+    width: auto;
+    padding: 8px 12px;
+    display: inline-block;
+    font-size: 0.9em;
+    margin-top: -5px; /* Adjust vertical position */
+}
+
+.modern-button.primary-button {
+    background-color: #8aff8a; /* Bright green */
+    color: #1a1a2e;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+.modern-button.primary-button:hover {
+    background-color: #adffad;
+}
+
+.modern-button.secondary-button {
+    background-color: #6a6a6a; /* Darker gray */
+    color: white;
+}
+
+.modern-button.secondary-button:hover {
+    background-color: #8a8a8a;
+}
+
+/* Toggle Switch Styling */
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.toggle-switch label {
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.toggle-switch input[type="checkbox"] {
+    position: relative;
+    width: 0;
+    height: 0;
+    visibility: hidden;
+    margin: 0; /* Remove default margin */
+}
+
+.toggle-switch .slider {
+    cursor: pointer;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: 0.4s;
+    position: relative;
+}
+
+.toggle-switch .slider:before {
+    content: "";
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.4s;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: #8aff8a;
+}
+
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+.toggle-switch .slider.round {
+    border-radius: 34px;
+}
+
+.toggle-switch .slider.round:before {
+    border-radius: 50%;
+}
+
+
+.status-message {
+    font-size: 0.85em;
+    margin-top: 10px;
+    color: #a0a0a0;
+}
+
+.status-message.success {
+    color: #8aff8a;
+}
+
+.status-message.error {
+    color: #ff8a8a;
+}
+
+.warning-message {
+    background-color: #ffeb3b20; /* Light yellow with transparency */
+    border-left: 5px solid #ffeb3b; /* Yellow border */
+    padding: 10px 15px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-size: 0.85em;
+    color: #ffeb3b;
+}
+
+.warning-message ol {
+    margin-top: 5px;
+    padding-left: 20px;
+}
+
+.warning-message a {
+    color: #fffacd; /* Lighter yellow for links */
+    text-decoration: underline;
+}
+
+.warning-message a:hover {
+    color: #ffeb3b;
+}
+
+.small-text {
+    font-size: 0.8em;
+    color: #a0a0a0;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+.chat-display {
+    flex: 1;
+    background-color: #1a1a2e; /* Darker for chat area */
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 10px; /* For scrollbar */
+    scroll-behavior: smooth;
+}
+
+.chat-messages .message {
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    font-size: 0.9em;
+}
+
+.chat-messages .message strong {
+    color: #e6e6e6; /* White for usernames */
+}
+
+.chat-messages .message span {
+    color: #c0c0c0; /* Gray for message text */
+}
+
+/* Custom Scrollbar for Chat and Log Areas */
+.chat-messages::-webkit-scrollbar,
+.log-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track,
+.log-area::-webkit-scrollbar-track {
+    background: #3a3a5a;
+    border-radius: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb,
+.log-area::-webkit-scrollbar-thumb {
+    background-color: #6a6aff;
+    border-radius: 10px;
+    border: 2px solid #3a3a5a;
+}
+
+.conversation-log {
+    height: 250px; /* Fixed height for log */
+    background-color: #1a1a2e;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.log-area {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: #3a3a5a;
+    border: 1px solid #5a5a7a;
+    border-radius: 5px;
+    padding: 10px;
+    color: #e0e0e0;
+    font-size: 0.85em;
+    line-height: 1.4;
+    resize: none; /* Prevent manual resizing */
+}
+
+.log-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.log-actions button {
+    flex: 1;
+}
+
+hr {
+    border: 0;
+    border-top: 1px dashed #3a3a6a;
+    margin: 20px 0;
+}
+
+@media (max-width: 1200px) {
+    .container {
+        flex-direction: column;
+        max-width: 95%; /* Adjust for smaller screens */
+        min-height: auto; /* Allow height to adjust */
+    }
+
+    .sidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 1px solid #3a3a6a;
+    }
+
+    .main-content {
+        padding-top: 15px;
+    }
+
+    .modern-button {
+        width: auto; /* Allow buttons to be inline */
+        margin-right: 10px; /* Add some spacing */
+    }
+
+    .modern-button.primary-button,
+    .modern-button.secondary-button {
+        width: calc(100% - 20px); /* Full width again for main buttons */
+        margin-right: 0;
+    }
+}

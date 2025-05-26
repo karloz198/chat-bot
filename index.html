@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot de Voz para Twitch</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Configuración del Chatbot</h2>
+
+            <div class="config-section">
+                <h3>Conexión</h3>
+                <button id="connectTwitchBtn" class="modern-button">Conectar con Twitch</button>
+                <p id="twitchStatus" class="status-message"></p>
+                <hr>
+                <label for="geminiApiKeyInput">API Key de Google Gemini:</label>
+                <input type="text" id="geminiApiKeyInput" placeholder="Introduce tu API Key de Gemini">
+                <button id="saveGeminiApiKey" class="modern-button small-button">Guardar Key</button>
+                <p class="warning-message">
+                    <strong>¡Advertencia importante sobre la API Key de Gemini!</strong><br>
+                    Al introducir tu API Key, esta se almacenará en tu navegador. Esto te da control directo sobre el uso y costos, pero si tu dispositivo o navegador son comprometidos, la clave podría ser accesible.
+                    <br>
+                    <strong>Recomendamos encarecidamente:</strong>
+                    <ol>
+                        <li>Genera una API Key específica para esta aplicación.</li>
+                        <li>Restringe la API Key para que solo funcione con la API de "Generative Language API".</li>
+                        <li>Considera restringir la API Key a tu dominio `https://karloz198.github.io/` (y `http://127.0.0.1` o `http://localhost` para pruebas locales).</li>
+                    </ol>
+                    Puedes obtener tu API Key y gestionarla en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio (aistudio.google.com/app/apikey)</a>.
+                    Monitorea el uso y establece límites de facturación en tu Google Cloud Console si lo deseas.
+                </p>
+            </div>
+
+            <div class="config-section">
+                <h3>Voz del Chatbot</h3>
+                <div class="toggle-switch">
+                    <label>Activar Voz del Chatbot:</label>
+                    <input type="checkbox" id="enableChatbotVoice">
+                    <span class="slider round"></span>
+                </div>
+
+                <label for="voiceSelect">Seleccionar Voz:</label>
+                <select id="voiceSelect"></select>
+                <p class="small-text">Las voces disponibles dependen de tu navegador y sistema operativo.</p>
+
+                <label for="wordLimit">Límite de Palabras del Chatbot:</label>
+                <input type="range" id="wordLimit" min="4" max="25" value="10">
+                <span id="wordLimitValue">10 palabras</span>
+            </div>
+
+            <div class="config-section">
+                <h3>Filtrado y Control</h3>
+                <label for="filterWords">Filtrar Palabras (separadas por coma):</label>
+                <textarea id="filterWords" rows="3" placeholder="ej: insulto, spam, oferta"></textarea>
+                <button id="saveFilterWords" class="modern-button small-button">Guardar Filtros</button>
+
+                <label for="blacklistUsers">Lista Negra de Usuarios (uno por línea):</label>
+                <textarea id="blacklistUsers" rows="5" placeholder="ej: usuario_troll&#10;bot_de_stream"></textarea>
+                <button id="saveBlacklistUsers" class="modern-button small-button">Guardar Lista Negra</button>
+            </div>
+
+            <button id="saveAllSettings" class="modern-button primary-button">Guardar Todas las Configuraciones</button>
+            <p class="status-message" id="saveStatus"></p>
+        </div>
+
+        <div class="main-content">
+            <div class="chat-display">
+                <h2>Chat del Directo</h2>
+                <div id="twitchChatArea" class="chat-messages">
+                    </div>
+            </div>
+
+            <div class="conversation-log">
+                <h2>Registro de Conversación</h2>
+                <textarea id="conversationLog" class="log-area" readonly></textarea>
+                <div class="log-actions">
+                    <button id="saveLogBtn" class="modern-button">Guardar Log (.txt)</button>
+                    <button id="clearLogBtn" class="modern-button secondary-button">Limpiar Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="tmi.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

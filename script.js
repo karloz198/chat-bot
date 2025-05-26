@@ -19,7 +19,7 @@ const saveLogBtn = document.getElementById('saveLogBtn');
 const clearLogBtn = document.getElementById('clearLogBtn');
 
 // --- Configuración Global ---
-const TWITCH_CLIENT_ID = 'TU_TWITCH_CLIENT_ID'; // <--- ¡IMPORTANTE! Reemplaza con tu Client ID de Twitch
+const TWITCH_CLIENT_ID = 'y7u0s6218w6byx4whe352xpq6l3a9i'; // <--- ¡IMPORTANTE! Reemplaza con tu Client ID de Twitch
 // La URL de redirección ahora se construirá dinámicamente o se basará en la URL actual del navegador.
 // Asegúrate de que esta URL esté registrada EXACTAMENTE en tu aplicación de Twitch Developers.
 const TWITCH_REDIRECT_URI = window.location.origin + window.location.pathname; 

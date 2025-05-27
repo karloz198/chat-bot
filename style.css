@@ -1,197 +1,233 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a2e; /* Azul oscuro profundo */
+    color: #e0e0e0; /* Texto claro */
     margin: 0;
-    padding: 0;
-    background-color: #1a1a2e; /* Dark blue-purple */
-    color: #e0e0e0; /* Light gray for text */
+    padding: 20px;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Align to top for longer content */
-    min-height: 100vh; /* Minimum full viewport height */
-    padding: 20px;
-    box-sizing: border-box; /* Include padding in element's total width and height */
+    align-items: flex-start; /* Alinea al inicio del eje transversal */
+    min-height: 100vh; /* Asegura que ocupe al menos toda la altura de la ventana */
+    box-sizing: border-box; /* Incluye padding en el ancho/alto total */
 }
 
 .container {
     display: flex;
+    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
+    gap: 30px; /* Espacio entre las columnas */
+    max-width: 1200px; /* Ancho máximo del contenedor */
     width: 100%;
-    max-width: 1600px; /* Increased max-width */
-    background-color: #2a2a4a; /* Slightly lighter dark blue-purple */
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-    min-height: 90vh; /* Ensure container fills vertical space */
+    background-color: #16213e; /* Azul oscuro ligeramente más claro para el fondo principal */
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    padding: 30px;
+    box-sizing: border-box;
 }
 
 .sidebar {
-    width: 300px;
-    background-color: #1a1a3e; /* Darker sidebar */
+    flex: 1; /* Ocupa una parte flexible del espacio */
+    min-width: 300px; /* Ancho mínimo para la barra lateral */
+    background-color: #0f3460; /* Azul oscuro más intenso para la barra lateral */
     padding: 25px;
-    border-right: 1px solid #3a3a6a;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    flex-shrink: 0; /* Don't allow shrinking */
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    overflow-y: auto; /* Permite scroll si el contenido es muy largo */
+    max-height: calc(100vh - 80px); /* Altura máxima para la barra lateral, ajusta si es necesario */
 }
 
 .main-content {
-    flex-grow: 1;
+    flex: 2; /* Ocupa el doble de espacio que la barra lateral */
+    min-width: 400px; /* Ancho mínimo para el contenido principal */
     display: flex;
     flex-direction: column;
-    padding: 25px;
-    gap: 20px;
+    gap: 25px;
 }
 
 h2 {
-    color: #8aff8a; /* Bright green */
+    color: #e94560; /* Rosa/rojo vibrante */
+    text-align: center;
     margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.6em;
+    margin-bottom: 25px;
+    font-size: 1.8em;
+    font-weight: 600;
 }
 
 h3 {
-    color: #9affff; /* Bright cyan */
+    color: #53d8ff; /* Azul claro para subsecciones */
     margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.2em;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    border-bottom: 1px solid rgba(83, 216, 255, 0.3); /* Línea inferior sutil */
+    padding-bottom: 5px;
 }
 
 .config-section {
-    padding-bottom: 15px;
-    border-bottom: 1px solid #3a3a6a;
-}
-
-.config-section:last-of-type {
-    border-bottom: none;
+    background-color: #1a2a4e; /* Fondo para secciones de configuración */
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
 }
 
 label {
     display: block;
     margin-bottom: 8px;
-    color: #c0c0c0;
     font-weight: bold;
-    font-size: 0.95em;
+    color: #e0e0e0;
 }
 
 input[type="text"],
+input[type="range"],
 textarea,
 select {
-    width: calc(100% - 20px);
+    width: calc(100% - 20px); /* Ajusta por padding */
     padding: 10px;
     margin-bottom: 15px;
-    background-color: #3a3a5a;
-    border: 1px solid #5a5a7a;
+    border: 1px solid #0f3460;
     border-radius: 5px;
+    background-color: #27496d; /* Fondo de input más oscuro */
     color: #e0e0e0;
-    font-size: 0.9em;
-    resize: vertical; /* Allow vertical resizing for textareas */
+    font-size: 1em;
+    box-sizing: border-box; /* Incluye padding en el ancho/alto total */
 }
 
-input[type="range"] {
-    width: calc(100% - 20px);
-    margin-top: 5px;
-    margin-bottom: 10px;
-    background-color: transparent; /* Make track transparent */
-    -webkit-appearance: none; /* Remove default styling */
-    height: 8px; /* Height of the track */
-    border-radius: 5px;
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #e94560;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.3);
 }
 
-/* Style for range slider track */
-input[type="range"]::-webkit-slider-runnable-track {
-    background: linear-gradient(to right, #8aff8a, #4a4aff); /* Gradient track */
-    height: 8px;
-    border-radius: 5px;
+textarea {
+    resize: vertical; /* Permite redimensionar verticalmente */
+    min-height: 60px;
 }
 
-input[type="range"]::-moz-range-track {
-    background: linear-gradient(to right, #8aff8a, #4a4aff);
-    height: 8px;
-    border-radius: 5px;
-}
-
-/* Style for range slider thumb */
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    height: 18px;
-    width: 18px;
-    border-radius: 50%;
-    background: #4a4aff; /* Thumb color */
-    cursor: pointer;
-    margin-top: -5px; /* Center thumb vertically */
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    border: 2px solid #e0e0e0;
-}
-
-input[type="range"]::-moz-range-thumb {
-    height: 18px;
-    width: 18px;
-    border-radius: 50%;
-    background: #4a4aff;
-    cursor: pointer;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    border: 2px solid #e0e0e0;
-}
-
-#wordLimitValue {
-    display: block;
-    text-align: right;
-    font-size: 0.85em;
-    color: #a0a0a0;
-    margin-bottom: 15px;
+hr {
+    border: none;
+    border-top: 1px solid #27496d;
+    margin: 20px 0;
 }
 
 .modern-button {
-    background-color: #4a4aff; /* Bright blue */
+    background-color: #e94560; /* Color principal del botón */
     color: white;
-    padding: 10px 15px;
+    padding: 12px 25px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 1em;
+    font-size: 1.1em;
+    font-weight: bold;
     transition: background-color 0.3s ease, transform 0.2s ease;
-    display: block; /* Make it a block element */
-    width: calc(100% - 20px); /* Full width minus padding */
+    display: inline-block;
+    width: auto;
     text-align: center;
-    box-sizing: border-box;
+    margin-top: 10px;
     margin-bottom: 10px;
 }
 
 .modern-button:hover {
-    background-color: #6a6aff; /* Lighter blue on hover */
-    transform: translateY(-2px);
+    background-color: #ff6a85; /* Tono más claro al pasar el ratón */
+    transform: translateY(-2px); /* Pequeño efecto de elevación */
 }
 
 .modern-button:active {
+    background-color: #c93550;
     transform: translateY(0);
 }
 
 .modern-button.small-button {
-    width: auto;
-    padding: 8px 12px;
-    display: inline-block;
+    padding: 8px 15px;
     font-size: 0.9em;
-    margin-top: -5px; /* Adjust vertical position */
+    margin-left: 10px; /* Para alinear con inputs */
 }
 
 .modern-button.primary-button {
-    background-color: #8aff8a; /* Bright green */
-    color: #1a1a2e;
-    margin-top: 20px;
-    font-weight: bold;
+    background-color: #53d8ff; /* Botón primario diferente */
 }
 
 .modern-button.primary-button:hover {
-    background-color: #adffad;
+    background-color: #88edff;
+}
+
+.modern-button.primary-button:active {
+    background-color: #3aa6d0;
 }
 
 .modern-button.secondary-button {
-    background-color: #6a6a6a; /* Darker gray */
-    color: white;
+    background-color: #3e5a87; /* Botón secundario */
 }
 
 .modern-button.secondary-button:hover {
-    background-color: #8a8a8a;
+    background-color: #5f7ca8;
+}
+
+.modern-button.secondary-button:active {
+    background-color: #2b4468;
+}
+
+.status-message {
+    margin-top: 10px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.status-message.info {
+    background-color: #27496d;
+    color: #a0dfff;
+}
+
+.status-message.success {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+}
+
+.status-message.error {
+    background-color: #f44336; /* Rojo */
+    color: white;
+}
+
+.warning-message {
+    background-color: #ffcc00; /* Amarillo */
+    color: #333; /* Texto oscuro para contraste */
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 0.85em;
+    margin-top: 20px;
+    border-left: 5px solid #ff9900; /* Borde naranja */
+}
+
+.warning-message strong {
+    color: #a05000;
+}
+
+.warning-message ol {
+    margin-top: 10px;
+    padding-left: 20px;
+}
+
+.warning-message li {
+    margin-bottom: 5px;
+}
+
+.warning-message a {
+    color: #0000ee; /* Enlace por defecto */
+    text-decoration: underline;
+}
+
+.warning-message a:hover {
+    color: #0000a0;
+}
+
+.small-text {
+    font-size: 0.85em;
+    color: #b0b0b0;
+    margin-top: -10px; /* Ajuste para pegarlo al elemento anterior */
+    margin-bottom: 10px;
+    display: block;
 }
 
 /* Toggle Switch Styling */
@@ -199,12 +235,12 @@ input[type="range"]::-moz-range-thumb {
     display: flex;
     align-items: center;
     margin-bottom: 15px;
-    gap: 10px;
 }
 
 .toggle-switch label {
-    margin-bottom: 0;
-    flex-shrink: 0;
+    margin-right: 15px;
+    margin-bottom: 0; /* Override default label margin */
+    font-weight: normal; /* Override bold */
 }
 
 .toggle-switch input[type="checkbox"] {
@@ -212,206 +248,192 @@ input[type="range"]::-moz-range-thumb {
     width: 0;
     height: 0;
     visibility: hidden;
-    margin: 0; /* Remove default margin */
 }
 
 .toggle-switch .slider {
-    cursor: pointer;
-    width: 40px;
-    height: 20px;
-    background-color: #ccc;
-    border-radius: 20px;
-    transition: 0.4s;
     position: relative;
+    display: block;
+    width: 45px;
+    height: 25px;
+    background-color: #ccc;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .toggle-switch .slider:before {
-    content: "";
+    content: '';
     position: absolute;
-    height: 16px;
-    width: 16px;
-    left: 2px;
-    bottom: 2px;
-    background-color: white;
+    width: 21px;
+    height: 21px;
     border-radius: 50%;
-    transition: 0.4s;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
 }
 
-.toggle-switch input:checked + .slider {
-    background-color: #8aff8a;
+.toggle-switch input[type="checkbox"]:checked + .slider {
+    background-color: #53d8ff; /* Color cuando está activado */
 }
 
-.toggle-switch input:checked + .slider:before {
+.toggle-switch input[type="checkbox"]:checked + .slider:before {
     transform: translateX(20px);
 }
 
-.toggle-switch .slider.round {
-    border-radius: 34px;
-}
-
-.toggle-switch .slider.round:before {
-    border-radius: 50%;
-}
-
-
-.status-message {
-    font-size: 0.85em;
-    margin-top: 10px;
-    color: #a0a0a0;
-}
-
-.status-message.success {
-    color: #8aff8a;
-}
-
-.status-message.error {
-    color: #ff8a8a;
-}
-
-.warning-message {
-    background-color: #ffeb3b20; /* Light yellow with transparency */
-    border-left: 5px solid #ffeb3b; /* Yellow border */
-    padding: 10px 15px;
-    margin-top: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    font-size: 0.85em;
-    color: #ffeb3b;
-}
-
-.warning-message ol {
-    margin-top: 5px;
-    padding-left: 20px;
-}
-
-.warning-message a {
-    color: #fffacd; /* Lighter yellow for links */
-    text-decoration: underline;
-}
-
-.warning-message a:hover {
-    color: #ffeb3b;
-}
-
-.small-text {
-    font-size: 0.8em;
-    color: #a0a0a0;
-    margin-top: -10px;
-    margin-bottom: 10px;
-}
-
-.chat-display {
-    flex: 1;
-    background-color: #1a1a2e; /* Darker for chat area */
+/* Chat Display */
+.chat-display, .conversation-log {
+    background-color: #1a2a4e;
+    padding: 20px;
     border-radius: 10px;
-    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
+    flex: 1; /* Ocupa espacio flexible dentro de main-content */
+    min-height: 250px; /* Altura mínima para el chat y log */
 }
 
 .chat-messages {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding-right: 10px; /* For scrollbar */
-    scroll-behavior: smooth;
-}
-
-.chat-messages .message {
-    margin-bottom: 8px;
-    word-wrap: break-word;
-    font-size: 0.9em;
-}
-
-.chat-messages .message strong {
-    color: #e6e6e6; /* White for usernames */
-}
-
-.chat-messages .message span {
-    color: #c0c0c0; /* Gray for message text */
-}
-
-/* Custom Scrollbar for Chat and Log Areas */
-.chat-messages::-webkit-scrollbar,
-.log-area::-webkit-scrollbar {
-    width: 8px;
-}
-
-.chat-messages::-webkit-scrollbar-track,
-.log-area::-webkit-scrollbar-track {
-    background: #3a3a5a;
-    border-radius: 10px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb,
-.log-area::-webkit-scrollbar-thumb {
-    background-color: #6a6aff;
-    border-radius: 10px;
-    border: 2px solid #3a3a5a;
-}
-
-.conversation-log {
-    height: 250px; /* Fixed height for log */
-    background-color: #1a1a2e;
-    border-radius: 10px;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-}
-
-.log-area {
-    flex-grow: 1;
-    overflow-y: auto;
-    background-color: #3a3a5a;
-    border: 1px solid #5a5a7a;
+    flex-grow: 1; /* Permite que el chat ocupe todo el espacio disponible */
+    border: 1px solid #0f3460;
     border-radius: 5px;
     padding: 10px;
-    color: #e0e0e0;
-    font-size: 0.85em;
+    overflow-y: auto; /* Scroll para el chat */
+    background-color: #121c2e; /* Fondo ligeramente más oscuro para el área de chat */
+    margin-top: 15px;
+    color: #f0f0f0;
+    font-size: 0.95em;
+    word-wrap: break-word; /* Rompe palabras largas */
+}
+
+.chat-messages p {
+    margin: 5px 0;
     line-height: 1.4;
-    resize: none; /* Prevent manual resizing */
+}
+
+/* Log Area */
+.log-area {
+    flex-grow: 1;
+    border: 1px solid #0f3460;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #121c2e;
+    font-family: 'Consolas', 'Monaco', monospace; /* Fuente monoespaciada para logs */
+    font-size: 0.9em;
+    color: #a0dfff; /* Texto azul claro para logs */
+    resize: none; /* No permitir redimensionar la textarea */
+    margin-top: 15px;
 }
 
 .log-actions {
-    margin-top: 15px;
     display: flex;
-    gap: 10px;
+    gap: 15px;
+    margin-top: 15px;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
 }
 
-.log-actions button {
-    flex: 1;
-}
-
-hr {
-    border: 0;
-    border-top: 1px dashed #3a3a6a;
-    margin: 20px 0;
-}
-
-@media (max-width: 1200px) {
+/* Responsive adjustments */
+@media (max-width: 900px) {
     .container {
-        flex-direction: column;
-        max-width: 95%; /* Adjust for smaller screens */
-        min-height: auto; /* Allow height to adjust */
+        flex-direction: column; /* Apila las columnas en pantallas pequeñas */
+        padding: 20px;
+    }
+
+    .sidebar, .main-content {
+        min-width: unset; /* Elimina el ancho mínimo para que se ajusten */
+        width: 100%; /* Ocupan todo el ancho disponible */
+        max-height: unset; /* Elimina la altura máxima fija */
     }
 
     .sidebar {
-        width: auto;
-        border-right: none;
-        border-bottom: 1px solid #3a3a6a;
+        margin-bottom: 20px; /* Espacio entre la sidebar y el main-content apilados */
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
     }
 
-    .main-content {
-        padding-top: 15px;
+    .container {
+        padding: 15px;
     }
 
     .modern-button {
-        width: auto; /* Allow buttons to be inline */
-        margin-right: 10px; /* Add some spacing */
+        width: 100%; /* Botones ocupan todo el ancho en móviles */
+        margin-left: 0; /* Deshace el margen si existía */
     }
 
-    .modern-button.primary-button,
-    .modern-button.secondary-button {
-        width: calc(100% - 20px); /* Full width again for main buttons */
-        margin-right: 0;
+    .modern-button.small-button {
+        margin-left: 0;
+        margin-bottom: 10px;
     }
+
+    .log-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Estilo para el enlace de "cómo obtener un Access Token manual" */
+#how-to-get-manual-token {
+    background-color: #27496d; /* Fondo ligeramente más claro para la sección de ayuda */
+    border-radius: 10px;
+    margin-top: 30px;
+    padding: 25px;
+    color: #e0e0e0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#how-to-get-manual-token h3 {
+    color: #ffcc00; /* Amarillo para el título de ayuda */
+    border-bottom: 1px solid rgba(255, 204, 0, 0.3);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+#how-to-get-manual-token p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+#how-to-get-manual-token ol {
+    margin-top: 15px;
+    padding-left: 20px;
+}
+
+#how-to-get-manual-token li {
+    margin-bottom: 8px;
+}
+
+#how-to-get-manual-token code {
+    background-color: #1a1a2e; /* Fondo oscuro para el código */
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+    color: #a0dfff;
+}
+
+#how-to-get-manual-token pre {
+    background-color: #1a1a2e;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto; /* Scroll horizontal si el código es muy largo */
+    border: 1px solid #0f3460;
+    margin-bottom: 15px;
+}
+
+#manualTokenLink {
+    color: #ffcc00; /* Color distintivo para el enlace manual de token */
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 5px;
+    padding: 5px 0;
+}
+
+#manualTokenLink:hover {
+    text-decoration: underline;
+    color: #fff0b3;
 }

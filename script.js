@@ -45,17 +45,41 @@ let enableChatbotVoice = localStorage.getItem('enableChatbotVoice') === 'true';
 let selectedVoiceURI = localStorage.getItem('selectedVoiceURI') || '';
 let chatbotWordLimit = parseInt(localStorage.getItem('chatbotWordLimit')) || 10;
 let filteredWords = JSON.parse(localStorage.getItem('filteredWords')) || [];
-let blacklistedUsers = JSON.parse(localStorage.getItem('blacklistedUsers')) || [];
+let blacklistedUsers = JSON.parse(localStorage.getItem('blacklistUsers')) || [];
 
 // Gemini AI (instancia del modelo si se usa)
 let geminiModel = null;
-const { GoogleGenerativeLanguageCloud } = window['@google/generative-language'];
+// Asegurarse de que la librería esté cargada antes de usarla
+if (window['@google/generative-language']) {
+    const { GoogleGenerativeLanguageCloud } = window['@google/generative-language'];
+    // Si ya hay API Key, inicializar el modelo
+    if (geminiApiKey) {
+        try {
+            geminiModel = new GoogleGenerativeLanguageCloud.GenerativeModel({
+                apiKey: geminiApiKey,
+                model: "gemini-pro"
+            });
+            console.log('Gemini AI Model initialized on load.');
+        } catch (e) {
+            console.error('Error initializing Gemini model on load:', e);
+            geminiModel = null;
+        }
+    }
+} else {
+    console.warn('Librería de Google Generative Language no cargada. La funcionalidad de Gemini no estará disponible.');
+}
+
 
 // --- Funciones de Utilidad ---
 
 function showStatus(element, message, type = 'info') {
     element.textContent = message;
     element.className = `status-message ${type}`;
+    // Opcional: desaparecer el mensaje después de un tiempo
+    setTimeout(() => {
+        element.textContent = '';
+        element.className = 'status-message';
+    }, 5000);
 }
 
 function appendMessageToChat(message) {
@@ -110,30 +134,38 @@ function loadSettings() {
     } else {
         manualTokenLink.textContent = "Primero, guarda tu Twitch Client ID para habilitar este enlace.";
         manualTokenLink.href = "#";
+        manualTokenLink.addEventListener('click', (e) => { // Evitar clic si no hay Client ID
+            if (!twitchClientId) e.preventDefault();
+        });
     }
 }
 
 // --- Autenticación de Twitch ---
 
 function authenticateWithTwitch() {
+    console.log('Iniciando authenticateWithTwitch()...');
     if (!twitchClientId) {
         showStatus(twitchStatus, 'Por favor, introduce y guarda tu Twitch Client ID primero.', 'error');
+        console.error('Error: Twitch Client ID no configurado.');
         return;
     }
 
     // Los scopes necesarios para leer el chat y obtener información del usuario
     const scopes = 'chat:read chat:edit user:read:email channel:moderate'; // Añadido channel:moderate por si acaso
     const authUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${twitchClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+    console.log('Redirigiendo a URL de autenticación de Twitch:', authUrl);
     window.location.href = authUrl;
 }
 
 function handleTwitchAuthCallback() {
+    console.log('handleTwitchAuthCallback() llamado. Comprobando hash de URL...');
     const hash = window.location.hash;
-    const params = new URLSearchParams(hash.substring(1));
+    const params = new URLSearchParams(hash.substring(1)); // Quita el '#'
     const accessToken = params.get('access_token');
     const error = params.get('error_description');
 
     if (accessToken) {
+        console.log('Access Token encontrado en la URL.');
         // Guardamos el token obtenido por OAuth
         localStorage.setItem('twitchOAuthAccessToken', accessToken);
         twitchOAuthAccessToken = accessToken;
@@ -147,6 +179,7 @@ function handleTwitchAuthCallback() {
             }
         })
         .then(response => {
+            console.log('Respuesta de la API de Helix Users:', response);
             if (!response.ok) {
                 if (response.status === 401) {
                     throw new Error('Token de Twitch inválido o expirado. Autentica de nuevo.');
@@ -156,6 +189,7 @@ function handleTwitchAuthCallback() {
             return response.json();
         })
         .then(data => {
+            console.log('Datos de usuario de Twitch:', data);
             if (data.data && data.data.length > 0) {
                 twitchAuthenticatedUsername = data.data[0].login;
                 localStorage.setItem('twitchAuthenticatedUsername', twitchAuthenticatedUsername);
@@ -177,33 +211,38 @@ function handleTwitchAuthCallback() {
         });
 
         // Limpia el hash de la URL para que no quede expuesto el token
-        window.history.pushState("", document.title, window.location.pathname + window.location.search);
+        window.history.replaceState("", document.title, window.location.pathname + window.location.search);
     } else if (error) {
         showStatus(twitchStatus, `Error de autenticación de Twitch: ${error}`, 'error');
         console.error('Error de autenticación de Twitch:', error);
+        window.history.replaceState("", document.title, window.location.pathname + window.location.search); // Limpiar hash incluso con error
+    } else {
+        console.log('No se encontró Access Token ni error en la URL. No es una redirección de autenticación.');
     }
-    // Si no hay token ni error, significa que no estamos en una redirección de auth
 }
 
 // --- Conexión al Chat de Twitch ---
 
 async function connectToTwitchChat() {
+    console.log('Iniciando connectToTwitchChat()...');
     let currentAccessToken = twitchManualAccessToken || twitchOAuthAccessToken;
     let usernameToConnect = twitchAuthenticatedUsername; // Siempre usamos el username autenticado
 
     if (!twitchClientId) {
         showStatus(twitchStatus, 'Por favor, introduce y guarda tu Twitch Client ID primero.', 'error');
+        console.error('Error: Twitch Client ID no configurado para la conexión.');
         return;
     }
 
     if (!currentAccessToken) {
         showStatus(twitchStatus, 'No hay Access Token de Twitch. Por favor, autentica o introduce uno manualmente.', 'error');
+        console.error('Error: No hay Access Token disponible.');
         return;
     }
 
     if (!usernameToConnect) {
-        showStatus(twitchStatus, 'No se pudo obtener el nombre de usuario de Twitch. Autentica de nuevo.', 'error');
-        // Intenta obtener el username si solo tienes el token (por ejemplo, si pegaste el manual)
+        showStatus(twitchStatus, 'No se pudo obtener el nombre de usuario de Twitch. Intentando obtenerlo con el token actual...', 'info');
+        console.log('Intentando obtener nombre de usuario con el token existente...');
         try {
             const response = await fetch('https://api.twitch.tv/helix/users', {
                 headers: {
@@ -229,6 +268,7 @@ async function connectToTwitchChat() {
 
     if (!usernameToConnect) { // Doble chequeo después del intento de obtenerlo
         showStatus(twitchStatus, 'No se pudo determinar el nombre de usuario para conectar. Intenta de nuevo.', 'error');
+        console.error('Error: No se pudo determinar el nombre de usuario para la conexión.');
         return;
     }
 
@@ -271,20 +311,28 @@ async function connectToTwitchChat() {
 
         twitchClient.on('connecting', () => {
             showStatus(twitchStatus, 'Conectando a Twitch...', 'info');
+            console.log('TMI.js: Conectando...');
         });
 
         twitchClient.on('reconnect', () => {
             showStatus(twitchStatus, 'Reconectando a Twitch...', 'info');
+            console.log('TMI.js: Reconectando...');
         });
 
         twitchClient.on('logon', () => {
-            console.log('Sesión iniciada con Twitch.');
+            console.log('TMI.js: Sesión iniciada con Twitch.');
+        });
+
+        twitchClient.on('join', (channel, username, self) => {
+            if (self) {
+                console.log(`TMI.js: Se ha unido al canal: ${channel}`);
+            }
         });
 
         await twitchClient.connect();
 
     } catch (error) {
-        console.error('Error al conectar a Twitch:', error);
+        console.error('Error general al conectar a Twitch:', error);
         showStatus(twitchStatus, `Error al conectar a Twitch: ${error.message}`, 'error');
         twitchClient = null; // Asegúrate de resetear el cliente en caso de error
     }
@@ -319,8 +367,10 @@ async function onTwitchMessage(channel, tags, message, self) {
     if (enableChatbotVoice && geminiModel) {
         try {
             const prompt = `El usuario ${username} dijo: "${message}". Responde a esto en un máximo de ${chatbotWordLimit} palabras. Si el mensaje es una pregunta, responde directamente. Si es un saludo, saluda de vuelta. Mantén un tono amigable.`;
+            console.log('Enviando prompt a Gemini:', prompt);
             const result = await geminiModel.generateContent(prompt);
             const responseText = await result.response.text();
+            console.log('Respuesta de Gemini:', responseText);
 
             // Asegurarse de que la respuesta no exceda el límite de palabras
             const words = responseText.split(/\s+/).filter(word => word.length > 0);
@@ -359,15 +409,21 @@ function populateVoiceList() {
         if (selectedVoiceURI && voice.voiceURI === selectedVoiceURI) {
             option.selected = true;
             foundSelected = true;
+        } else if (!selectedVoiceURI && voice.lang.startsWith('es')) { // Selecciona la primera voz en español por defecto si no hay una guardada
+            option.selected = true;
+            selectedVoiceURI = voice.voiceURI;
+            foundSelected = true;
         }
         voiceSelect.appendChild(option);
     });
 
-    // Si la voz guardada no se encuentra, selecciona la primera por defecto
+    // Si no se encontró ninguna voz guardada ni española, selecciona la primera disponible
     if (!foundSelected && voices.length > 0) {
         voiceSelect.options[0].selected = true;
         selectedVoiceURI = voices[0].voiceURI;
         localStorage.setItem('selectedVoiceURI', selectedVoiceURI);
+    } else if (foundSelected) {
+        localStorage.setItem('selectedVoiceURI', selectedVoiceURI); // Asegurarse de guardar la seleccionada
     }
 }
 
@@ -380,11 +436,11 @@ function speakText(text) {
 
         if (selectedVoice) {
             utterance.voice = selectedVoice;
+            utterance.lang = selectedVoice.lang;
         } else {
-            console.warn('Voz seleccionada no encontrada, usando la voz por defecto.');
+            console.warn('Voz seleccionada no encontrada, usando la voz por defecto del sistema.');
+            utterance.lang = 'es-ES'; // Valor por defecto si no se encuentra voz
         }
-
-        utterance.lang = utterance.voice ? utterance.voice.lang : 'es-ES'; // O usa un valor predeterminado seguro
 
         speechSynthesis.speak(utterance);
     } else {
@@ -396,7 +452,9 @@ function speakText(text) {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
-    handleTwitchAuthCallback(); // Siempre intenta manejar la redirección de Twitch al cargar
+    // handleTwitchAuthCallback() debe ejecutarse SIEMPRE al cargar la página
+    // para procesar cualquier token que venga en la URL después de una redirección de Twitch.
+    handleTwitchAuthCallback();
 
     // Cargar voces cuando estén disponibles
     if ('speechSynthesis' in window) {
@@ -428,6 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('twitchManualAccessToken', twitchManualAccessToken);
             showStatus(saveStatus, 'Access Token manual de Twitch guardado. ¡Prioridad a este token!', 'success');
             // Opcional: limpiar el OAuth token automático si se guarda uno manual
+            // Esto asegura que el token manual sea el único en uso
             localStorage.removeItem('twitchOAuthAccessToken');
             twitchOAuthAccessToken = null;
         } else {
@@ -440,16 +499,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     connectTwitchBtn.addEventListener('click', () => {
+        console.log('Botón "Conectar con Twitch" clickeado.'); // <<<<<< AQUI ESTÁ EL CONSOLE.LOG
         // Si hay un token manual, lo usamos. Si no, intentamos el OAuth.
         if (twitchManualAccessToken) {
-            console.log('Usando Access Token manual para conectar.');
+            console.log('Detectado Access Token manual. Intentando conectar directamente.');
             connectToTwitchChat();
         } else if (twitchOAuthAccessToken) {
-            console.log('Usando Access Token OAuth para conectar.');
+            console.log('Detectado Access Token OAuth automático. Intentando conectar directamente.');
             connectToTwitchChat();
         } else {
             // Si no hay ningún token, iniciar el flujo OAuth
-            console.log('No hay tokens guardados, iniciando flujo OAuth de Twitch.');
+            console.log('No hay tokens guardados. Iniciando flujo OAuth de Twitch para obtener uno.');
             authenticateWithTwitch();
         }
     });
@@ -459,16 +519,23 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('geminiApiKey', geminiApiKey);
         if (geminiApiKey) {
             // Inicializar el modelo Gemini
-            try {
-                geminiModel = new GoogleGenerativeLanguageCloud.GenerativeModel({
-                    apiKey: geminiApiKey,
-                    model: "gemini-pro" // Puedes especificar el modelo aquí
-                });
-                showStatus(saveStatus, 'API Key de Gemini guardada e inicializada.', 'success');
-                console.log('Gemini AI Model initialized.');
-            } catch (e) {
-                showStatus(saveStatus, `Error inicializando Gemini: ${e.message}`, 'error');
-                console.error('Error initializing Gemini model:', e);
+            if (window['@google/generative-language']) {
+                const { GoogleGenerativeLanguageCloud } = window['@google/generative-language'];
+                try {
+                    geminiModel = new GoogleGenerativeLanguageCloud.GenerativeModel({
+                        apiKey: geminiApiKey,
+                        model: "gemini-pro" // Puedes especificar el modelo aquí
+                    });
+                    showStatus(saveStatus, 'API Key de Gemini guardada e inicializada.', 'success');
+                    console.log('Gemini AI Model initialized.');
+                } catch (e) {
+                    showStatus(saveStatus, `Error inicializando Gemini: ${e.message}`, 'error');
+                    console.error('Error initializing Gemini model:', e);
+                    geminiModel = null;
+                }
+            } else {
+                showStatus(saveStatus, 'Librería de Google Generative Language no disponible.', 'error');
+                console.error('Librería de Google Generative Language no disponible. Revisa la inclusión en index.html');
                 geminiModel = null;
             }
         } else {
@@ -526,18 +593,4 @@ document.addEventListener('DOMContentLoaded', () => {
         conversationLog.value = '';
         showStatus(saveStatus, 'Registro de conversación limpiado.', 'info');
     });
-
-    // Inicializar Gemini AI si la API Key ya está guardada
-    if (geminiApiKey) {
-        try {
-            geminiModel = new GoogleGenerativeLanguageCloud.GenerativeModel({
-                apiKey: geminiApiKey,
-                model: "gemini-pro"
-            });
-            console.log('Gemini AI Model initialized on load.');
-        } catch (e) {
-            console.error('Error initializing Gemini model on load:', e);
-            geminiModel = null;
-        }
-    }
 });

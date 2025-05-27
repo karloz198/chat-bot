@@ -9,10 +9,15 @@ body {
     align-items: flex-start; /* Alinea al inicio del eje transversal */
     min-height: 100vh; /* Asegura que ocupe al menos toda la altura de la ventana */
     box-sizing: border-box; /* Incluye padding en el ancho/alto total */
+    overflow-y: auto; /* Permite scroll en el body si el contenido es largo */
 }
 
 .container {
-    display: flex; /* Usamos flexbox para las columnas */
+    display: flex;
+    /* Por defecto, en pantallas grandes, dos columnas */
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
     gap: 30px; /* Espacio entre las columnas */
     max-width: 1200px; /* Ancho máximo del contenedor */
     width: 100%;
@@ -24,20 +29,23 @@ body {
 }
 
 .sidebar {
-    flex: 0 0 350px; /* Ancho fijo para la barra lateral en pantallas grandes (350px) */
+    flex: 0 0 380px; /* Base fija para la barra lateral (ligeramente más ancha) */
     background-color: #0f3460; /* Azul oscuro más intenso para la barra lateral */
     padding: 25px;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    /* Permitimos que se adapte si es necesario, pero mantenemos una altura máxima */
+    max-height: calc(100vh - 40px); /* Ajusta a la altura de la ventana menos el padding del body */
     overflow-y: auto; /* Permite scroll si el contenido es muy largo */
-    max-height: calc(100vh - 80px); /* Altura máxima para la barra lateral, ajusta si es necesario */
+    box-sizing: border-box;
 }
 
 .main-content {
-    flex: 1; /* Ocupa el espacio restante disponible */
+    flex: 1; /* Ocupa el espacio restante disponible, se estira */
     display: flex;
     flex-direction: column;
     gap: 25px;
+    min-width: 400px; /* Mínimo para que el chat y log no se aplasten */
 }
 
 h2 {
@@ -139,6 +147,23 @@ hr {
     font-size: 0.9em;
     margin-left: 10px; /* Para alinear con inputs */
 }
+
+/* Fuerza el ancho de los botones para que se muestren inline con los inputs */
+input[type="text"] + .modern-button.small-button {
+    width: fit-content; /* Se ajusta al contenido */
+    display: inline-block;
+    vertical-align: middle; /* Alinea verticalmente con el input */
+    margin-top: 0;
+    margin-bottom: 15px; /* Recupera el margen del input */
+}
+
+/* Ajusta los inputs cuando están junto a un botón pequeño */
+input[type="text"].with-button {
+    width: calc(100% - 20px - 100px); /* Resta el ancho del botón y su margen */
+    display: inline-block;
+    margin-right: 0;
+}
+
 
 .modern-button.primary-button {
     background-color: #53d8ff; /* Botón primario diferente */
@@ -333,13 +358,14 @@ hr {
 #how-to-get-manual-token {
     background-color: #27496d; /* Fondo ligeramente más claro para la sección de ayuda */
     border-radius: 10px;
-    margin-top: 30px;
+    margin-top: 30px; /* Espacio para separarlo de la sección anterior */
     padding: 25px;
     color: #e0e0e0;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    /* Estas dos líneas son clave para que ocupe el ancho de la columna izquierda y no se desborde */
-    max-width: 100%; /* Asegura que no se desborde */
+    /* Estas líneas son clave para que ocupe el ancho de la columna izquierda y no se desborde */
+    width: 100%; /* Asegura que ocupe el 100% del espacio DISPONIBLE en la sidebar */
     box-sizing: border-box; /* Incluye padding en el ancho */
+    overflow-x: auto; /* Permite scroll horizontal si el contenido es demasiado ancho */
 }
 
 #how-to-get-manual-token h3 {
@@ -397,26 +423,23 @@ hr {
 }
 
 /* Responsive adjustments */
-@media (max-width: 900px) {
+/* Este breakpoint se aplica cuando la pantalla es de 1000px o menos */
+@media (max-width: 1000px) {
     .container {
-        flex-direction: column; /* Apila las columnas en pantallas pequeñas */
+        flex-direction: column; /* Apila las columnas */
         padding: 20px;
         gap: 20px; /* Reduce el espacio entre secciones apiladas */
     }
 
-    .sidebar, .main-content {
-        flex: auto; /* Permite que tomen su tamaño natural dentro de la columna */
-        width: 100%; /* Ocupan todo el ancho disponible */
-        max-height: unset; /* Elimina la altura máxima fija */
-    }
-
     .sidebar {
-        margin-bottom: 0; /* Elimina el margen inferior extra */
+        flex: auto; /* Permite que tome su tamaño natural dentro de la columna */
+        width: 100%; /* Ocupa todo el ancho disponible */
+        max-height: unset; /* Elimina la altura máxima fija, permite que se extienda */
     }
 
-    /* Ajuste para que la sección del token manual no sea gigante en móvil */
-    #how-to-get-manual-token {
-        padding: 15px; /* Reduce el padding en móvil */
+    .main-content {
+        min-width: unset; /* Deshace el min-width para adaptarse mejor */
+        width: 100%; /* Ocupa todo el ancho disponible */
     }
 }
 
@@ -437,6 +460,12 @@ hr {
     .modern-button.small-button {
         margin-left: 0;
         margin-bottom: 10px;
+        width: 100%; /* Asegura que los botones pequeños también sean de ancho completo */
+    }
+
+    input[type="text"].with-button {
+        width: 100%; /* El input también toma el 100% */
+        margin-right: 0;
     }
 
     .log-actions {

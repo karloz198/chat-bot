@@ -12,8 +12,7 @@ body {
 }
 
 .container {
-    display: flex;
-    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
+    display: flex; /* Usamos flexbox para las columnas */
     gap: 30px; /* Espacio entre las columnas */
     max-width: 1200px; /* Ancho máximo del contenedor */
     width: 100%;
@@ -25,8 +24,7 @@ body {
 }
 
 .sidebar {
-    flex: 1; /* Ocupa una parte flexible del espacio */
-    min-width: 300px; /* Ancho mínimo para la barra lateral */
+    flex: 0 0 350px; /* Ancho fijo para la barra lateral en pantallas grandes (350px) */
     background-color: #0f3460; /* Azul oscuro más intenso para la barra lateral */
     padding: 25px;
     border-radius: 10px;
@@ -36,8 +34,7 @@ body {
 }
 
 .main-content {
-    flex: 2; /* Ocupa el doble de espacio que la barra lateral */
-    min-width: 400px; /* Ancho mínimo para el contenido principal */
+    flex: 1; /* Ocupa el espacio restante disponible */
     display: flex;
     flex-direction: column;
     gap: 25px;
@@ -332,49 +329,6 @@ hr {
     justify-content: flex-end; /* Alinea los botones a la derecha */
 }
 
-/* Responsive adjustments */
-@media (max-width: 900px) {
-    .container {
-        flex-direction: column; /* Apila las columnas en pantallas pequeñas */
-        padding: 20px;
-    }
-
-    .sidebar, .main-content {
-        min-width: unset; /* Elimina el ancho mínimo para que se ajusten */
-        width: 100%; /* Ocupan todo el ancho disponible */
-        max-height: unset; /* Elimina la altura máxima fija */
-    }
-
-    .sidebar {
-        margin-bottom: 20px; /* Espacio entre la sidebar y el main-content apilados */
-    }
-}
-
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-
-    .container {
-        padding: 15px;
-    }
-
-    .modern-button {
-        width: 100%; /* Botones ocupan todo el ancho en móviles */
-        margin-left: 0; /* Deshace el margen si existía */
-    }
-
-    .modern-button.small-button {
-        margin-left: 0;
-        margin-bottom: 10px;
-    }
-
-    .log-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-}
-
 /* Estilo para el enlace de "cómo obtener un Access Token manual" */
 #how-to-get-manual-token {
     background-color: #27496d; /* Fondo ligeramente más claro para la sección de ayuda */
@@ -383,6 +337,9 @@ hr {
     padding: 25px;
     color: #e0e0e0;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    /* Estas dos líneas son clave para que ocupe el ancho de la columna izquierda y no se desborde */
+    max-width: 100%; /* Asegura que no se desborde */
+    box-sizing: border-box; /* Incluye padding en el ancho */
 }
 
 #how-to-get-manual-token h3 {
@@ -413,6 +370,7 @@ hr {
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 0.9em;
     color: #a0dfff;
+    word-break: break-all; /* Para que el código largo no se desborde */
 }
 
 #how-to-get-manual-token pre {
@@ -436,4 +394,53 @@ hr {
 #manualTokenLink:hover {
     text-decoration: underline;
     color: #fff0b3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .container {
+        flex-direction: column; /* Apila las columnas en pantallas pequeñas */
+        padding: 20px;
+        gap: 20px; /* Reduce el espacio entre secciones apiladas */
+    }
+
+    .sidebar, .main-content {
+        flex: auto; /* Permite que tomen su tamaño natural dentro de la columna */
+        width: 100%; /* Ocupan todo el ancho disponible */
+        max-height: unset; /* Elimina la altura máxima fija */
+    }
+
+    .sidebar {
+        margin-bottom: 0; /* Elimina el margen inferior extra */
+    }
+
+    /* Ajuste para que la sección del token manual no sea gigante en móvil */
+    #how-to-get-manual-token {
+        padding: 15px; /* Reduce el padding en móvil */
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .modern-button {
+        width: 100%; /* Botones ocupan todo el ancho en móviles */
+        margin-left: 0; /* Deshace el margen si existía */
+    }
+
+    .modern-button.small-button {
+        margin-left: 0;
+        margin-bottom: 10px;
+    }
+
+    .log-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }

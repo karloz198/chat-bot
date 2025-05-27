@@ -1,13 +1,27 @@
 // Variables globales
 let twitchClient = null;
-let twitchAccessToken = localStorage.getItem('twitchAccessToken') || null;
+
+// Nuevas variables para Client ID y Access Token manual
+let twitchClientId = localStorage.getItem('twitchClientId') || '';
+let twitchManualAccessToken = localStorage.getItem('twitchManualAccessToken') || null;
+
+// oauth token y username obtenidos automáticamente
+let twitchOAuthAccessToken = localStorage.getItem('twitchOAuthAccessToken') || null;
 let twitchAuthenticatedUsername = localStorage.getItem('twitchAuthenticatedUsername') || null;
-const redirectUri = 'https://karloz198.github.io/chat-bot/'; // Asegúrate de que esta sea tu URL de GitHub Pages
-const clientId = 'y7u0s6218w6byx4whe352xpq6l3a9i'; // ¡CAMBIA ESTO POR TU CLIENT ID DE TWITCH!
+
+const redirectUri = 'https://karloz198.github.io/chat-bot/'; // Tu URL de GitHub Pages
 
 // Elementos del DOM
 const connectTwitchBtn = document.getElementById('connectTwitchBtn');
 const twitchStatus = document.getElementById('twitchStatus');
+
+// Nuevos elementos para Twitch Client ID y Access Token
+const twitchClientIdInput = document.getElementById('twitchClientIdInput');
+const saveTwitchClientIdBtn = document.getElementById('saveTwitchClientIdBtn');
+const twitchAccessTokenInput = document.getElementById('twitchAccessTokenInput');
+const saveTwitchAccessTokenBtn = document.getElementById('saveTwitchAccessTokenBtn');
+const manualTokenLink = document.getElementById('manualTokenLink'); // Para el enlace dinámico
+
 const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
 const saveGeminiApiKeyBtn = document.getElementById('saveGeminiApiKey');
 const enableChatbotVoiceCheckbox = document.getElementById('enableChatbotVoice');
@@ -57,13 +71,14 @@ function appendToLog(message) {
 }
 
 function saveSettings() {
+    // Las configuraciones de Twitch ID/Token se guardan por separado en sus botones
     localStorage.setItem('geminiApiKey', geminiApiKey);
     localStorage.setItem('enableChatbotVoice', enableChatbotVoice);
     localStorage.setItem('selectedVoiceURI', selectedVoiceURI);
     localStorage.setItem('chatbotWordLimit', chatbotWordLimit);
     localStorage.setItem('filteredWords', JSON.stringify(filteredWords));
     localStorage.setItem('blacklistUsers', JSON.stringify(blacklistedUsers));
-    showStatus(saveStatus, 'Configuración guardada.', 'success');
+    showStatus(saveStatus, 'Configuración general guardada.', 'success');
 }
 
 function loadSettings() {
@@ -74,19 +89,41 @@ function loadSettings() {
     filterWordsInput.value = filteredWords.join(', ');
     blacklistUsersInput.value = blacklistedUsers.join('\n');
 
-    if (twitchAccessToken && twitchAuthenticatedUsername) {
-        showStatus(twitchStatus, `Autenticado como: ${twitchAuthenticatedUsername}. Conecta al chat.`, 'info');
+    // Cargar y mostrar los campos de Twitch
+    twitchClientIdInput.value = twitchClientId;
+    twitchAccessTokenInput.value = twitchManualAccessToken || ''; // Puede ser nulo si no se ha guardado uno manual
+
+    let currentTwitchStatus = 'No autenticado con Twitch.';
+    if (twitchManualAccessToken) {
+        currentTwitchStatus = 'Access Token manual cargado.';
+    } else if (twitchOAuthAccessToken && twitchAuthenticatedUsername) {
+        currentTwitchStatus = `Autenticado como: ${twitchAuthenticatedUsername}. Conecta al chat.`;
+    }
+
+    showStatus(twitchStatus, currentTwitchStatus, 'info');
+
+    // Actualizar el enlace para obtener token manual
+    if (twitchClientId) {
+        const manualAuthUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${twitchClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=chat:read+chat:edit+user:read:email+channel:moderate`;
+        manualTokenLink.href = manualAuthUrl;
+        manualTokenLink.textContent = "Haz clic aquí para generar tu token (con tu Client ID)";
     } else {
-        showStatus(twitchStatus, 'No autenticado con Twitch.', 'info');
+        manualTokenLink.textContent = "Primero, guarda tu Twitch Client ID para habilitar este enlace.";
+        manualTokenLink.href = "#";
     }
 }
 
 // --- Autenticación de Twitch ---
 
 function authenticateWithTwitch() {
+    if (!twitchClientId) {
+        showStatus(twitchStatus, 'Por favor, introduce y guarda tu Twitch Client ID primero.', 'error');
+        return;
+    }
+
     // Los scopes necesarios para leer el chat y obtener información del usuario
-    const scopes = 'chat:read chat:edit user:read:email';
-    const authUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+    const scopes = 'chat:read chat:edit user:read:email channel:moderate'; // Añadido channel:moderate por si acaso
+    const authUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${twitchClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
     window.location.href = authUrl;
 }
 
@@ -94,16 +131,18 @@ function handleTwitchAuthCallback() {
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get('access_token');
+    const error = params.get('error_description');
 
     if (accessToken) {
-        localStorage.setItem('twitchAccessToken', accessToken);
-        twitchAccessToken = accessToken;
+        // Guardamos el token obtenido por OAuth
+        localStorage.setItem('twitchOAuthAccessToken', accessToken);
+        twitchOAuthAccessToken = accessToken;
         showStatus(twitchStatus, 'Token de acceso de Twitch obtenido. Obteniendo nombre de usuario...', 'info');
 
         // Intenta obtener el nombre de usuario de Twitch
         fetch('https://api.twitch.tv/helix/users', {
             headers: {
-                'Client-ID': clientId,
+                'Client-ID': twitchClientId, // Usamos el client ID guardado
                 'Authorization': `Bearer ${accessToken}`
             }
         })
@@ -131,31 +170,65 @@ function handleTwitchAuthCallback() {
             showStatus(twitchStatus, `Error al obtener usuario de Twitch: ${error.message}`, 'error');
             console.error('Error al obtener usuario de Twitch:', error);
             // Si el token falló, límpialo para que el usuario pueda intentar de nuevo.
-            localStorage.removeItem('twitchAccessToken');
+            localStorage.removeItem('twitchOAuthAccessToken');
             localStorage.removeItem('twitchAuthenticatedUsername');
-            twitchAccessToken = null;
+            twitchOAuthAccessToken = null;
             twitchAuthenticatedUsername = null;
         });
 
         // Limpia el hash de la URL para que no quede expuesto el token
         window.history.pushState("", document.title, window.location.pathname + window.location.search);
-    } else {
-        const error = params.get('error_description') || 'Autenticación de Twitch cancelada o fallida.';
+    } else if (error) {
         showStatus(twitchStatus, `Error de autenticación de Twitch: ${error}`, 'error');
         console.error('Error de autenticación de Twitch:', error);
     }
+    // Si no hay token ni error, significa que no estamos en una redirección de auth
 }
 
 // --- Conexión al Chat de Twitch ---
 
-async function connectToTwitchChat(channelName) {
-    if (!twitchAccessToken) {
-        showStatus(twitchStatus, 'No hay token de acceso de Twitch. Por favor, conecta primero.', 'error');
+async function connectToTwitchChat() {
+    let currentAccessToken = twitchManualAccessToken || twitchOAuthAccessToken;
+    let usernameToConnect = twitchAuthenticatedUsername; // Siempre usamos el username autenticado
+
+    if (!twitchClientId) {
+        showStatus(twitchStatus, 'Por favor, introduce y guarda tu Twitch Client ID primero.', 'error');
         return;
     }
-    if (!channelName) {
-        console.error("Error: channelName es nulo o indefinido al intentar conectar a Twitch chat.");
-        showStatus(twitchStatus, 'No se pudo obtener el nombre del canal de Twitch. Por favor, autentícate de nuevo.', 'error');
+
+    if (!currentAccessToken) {
+        showStatus(twitchStatus, 'No hay Access Token de Twitch. Por favor, autentica o introduce uno manualmente.', 'error');
+        return;
+    }
+
+    if (!usernameToConnect) {
+        showStatus(twitchStatus, 'No se pudo obtener el nombre de usuario de Twitch. Autentica de nuevo.', 'error');
+        // Intenta obtener el username si solo tienes el token (por ejemplo, si pegaste el manual)
+        try {
+            const response = await fetch('https://api.twitch.tv/helix/users', {
+                headers: {
+                    'Client-ID': twitchClientId,
+                    'Authorization': `Bearer ${currentAccessToken}`
+                }
+            });
+            const data = await response.json();
+            if (data.data && data.data.length > 0) {
+                usernameToConnect = data.data[0].login;
+                localStorage.setItem('twitchAuthenticatedUsername', usernameToConnect); // Guardar para futuro
+                twitchAuthenticatedUsername = usernameToConnect;
+                console.log('Nombre de usuario obtenido con token:', usernameToConnect);
+            } else {
+                throw new Error('No se pudo obtener el nombre de usuario con el token proporcionado.');
+            }
+        } catch (error) {
+            console.error('Error al intentar obtener nombre de usuario con token existente:', error);
+            showStatus(twitchStatus, `Error: ${error.message}. Token inválido o expirado.`, 'error');
+            return;
+        }
+    }
+
+    if (!usernameToConnect) { // Doble chequeo después del intento de obtenerlo
+        showStatus(twitchStatus, 'No se pudo determinar el nombre de usuario para conectar. Intenta de nuevo.', 'error');
         return;
     }
 
@@ -170,10 +243,10 @@ async function connectToTwitchChat(channelName) {
         twitchClient = new tmi.Client({
             options: { debug: false }, // Cambiar a true para ver logs detallados de tmi.js en la consola
             identity: {
-                username: channelName,
-                password: `oauth:${twitchAccessToken}`
+                username: usernameToConnect,
+                password: `oauth:${currentAccessToken}`
             },
-            channels: [channelName]
+            channels: [usernameToConnect] // Conectamos al canal del usuario autenticado
         });
 
         twitchClient.on('message', onTwitchMessage);
@@ -205,9 +278,6 @@ async function connectToTwitchChat(channelName) {
         });
 
         twitchClient.on('logon', () => {
-            // Este evento ocurre después de autenticarse con el servidor de Twitch.
-            // Los canales aún pueden no estar completamente listos aquí,
-            // el evento 'connected' es más fiable para cuando se ha unido al canal.
             console.log('Sesión iniciada con Twitch.');
         });
 
@@ -245,7 +315,7 @@ async function onTwitchMessage(channel, tags, message, self) {
         }
     }
 
-    // Procesar con Gemini si la voz del chatbot está activada
+    // Procesar con Gemini si la voz del chatbot está activada y el modelo está inicializado
     if (enableChatbotVoice && geminiModel) {
         try {
             const prompt = `El usuario ${username} dijo: "${message}". Responde a esto en un máximo de ${chatbotWordLimit} palabras. Si el mensaje es una pregunta, responde directamente. Si es un saludo, saluda de vuelta. Mantén un tono amigable.`;
@@ -337,46 +407,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Event listeners
-    connectTwitchBtn.addEventListener('click', () => {
-        if (!twitchAccessToken) {
-            authenticateWithTwitch();
-        } else {
-            // Si ya tenemos token, intentamos conectar directamente
-            if (twitchAuthenticatedUsername) {
-                connectToTwitchChat(twitchAuthenticatedUsername);
+    // Event listener para el Client ID de Twitch
+    saveTwitchClientIdBtn.addEventListener('click', () => {
+        twitchClientId = twitchClientIdInput.value.trim();
+        localStorage.setItem('twitchClientId', twitchClientId);
+        showStatus(saveStatus, 'Client ID de Twitch guardado.', 'success');
+        loadSettings(); // Recargar settings para actualizar el enlace de token manual
+    });
+
+    // Event listener para el Access Token manual de Twitch
+    saveTwitchAccessTokenBtn.addEventListener('click', () => {
+        const token = twitchAccessTokenInput.value.trim();
+        if (token) {
+            // Verificar si el token es un OAuth token completo (ej. oauth:abc...)
+            if (token.startsWith('oauth:')) {
+                 twitchManualAccessToken = token.substring(6); // Eliminar 'oauth:'
             } else {
-                // Si hay token pero no username (ej. recarga), intentamos obtenerlo de nuevo
-                showStatus(twitchStatus, 'Token de acceso de Twitch encontrado, obteniendo nombre de usuario...', 'info');
-                fetch('https://api.twitch.tv/helix/users', {
-                    headers: {
-                        'Client-ID': clientId,
-                        'Authorization': `Bearer ${twitchAccessToken}`
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.data && data.data.length > 0) {
-                        twitchAuthenticatedUsername = data.data[0].login;
-                        localStorage.setItem('twitchAuthenticatedUsername', twitchAuthenticatedUsername);
-                        connectToTwitchChat(twitchAuthenticatedUsername);
-                    } else {
-                        showStatus(twitchStatus, 'No se pudo obtener el nombre de usuario de Twitch. Autentica de nuevo.', 'error');
-                        localStorage.removeItem('twitchAccessToken'); // Limpiar token si no es válido
-                        localStorage.removeItem('twitchAuthenticatedUsername');
-                        twitchAccessToken = null;
-                        twitchAuthenticatedUsername = null;
-                    }
-                })
-                .catch(error => {
-                    showStatus(twitchStatus, `Error al obtener usuario: ${error.message}. Autentica de nuevo.`, 'error');
-                    console.error('Error fetching Twitch user:', error);
-                    localStorage.removeItem('twitchAccessToken');
-                    localStorage.removeItem('twitchAuthenticatedUsername');
-                    twitchAccessToken = null;
-                    twitchAuthenticatedUsername = null;
-                });
+                 twitchManualAccessToken = token;
             }
+            localStorage.setItem('twitchManualAccessToken', twitchManualAccessToken);
+            showStatus(saveStatus, 'Access Token manual de Twitch guardado. ¡Prioridad a este token!', 'success');
+            // Opcional: limpiar el OAuth token automático si se guarda uno manual
+            localStorage.removeItem('twitchOAuthAccessToken');
+            twitchOAuthAccessToken = null;
+        } else {
+            twitchManualAccessToken = null;
+            localStorage.removeItem('twitchManualAccessToken');
+            showStatus(saveStatus, 'Access Token manual de Twitch eliminado.', 'info');
+        }
+        loadSettings(); // Recargar el estado
+    });
+
+
+    connectTwitchBtn.addEventListener('click', () => {
+        // Si hay un token manual, lo usamos. Si no, intentamos el OAuth.
+        if (twitchManualAccessToken) {
+            console.log('Usando Access Token manual para conectar.');
+            connectToTwitchChat();
+        } else if (twitchOAuthAccessToken) {
+            console.log('Usando Access Token OAuth para conectar.');
+            connectToTwitchChat();
+        } else {
+            // Si no hay ningún token, iniciar el flujo OAuth
+            console.log('No hay tokens guardados, iniciando flujo OAuth de Twitch.');
+            authenticateWithTwitch();
         }
     });
 

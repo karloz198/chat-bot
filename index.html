@@ -13,6 +13,25 @@
 
             <div class="config-section">
                 <h3>Conexión</h3>
+                <label for="twitchClientIdInput">Twitch Client ID:</label>
+                <input type="text" id="twitchClientIdInput" placeholder="Introduce tu Client ID de Twitch">
+                <button id="saveTwitchClientIdBtn" class="modern-button small-button">Guardar Client ID</button>
+                <p class="small-text">
+                    Puedes obtener tu Client ID registrando una aplicación en
+                    <a href="https://dev.twitch.tv/console/apps/create" target="_blank" rel="noopener noreferrer">Twitch Developers Console</a>.
+                    Asegúrate de añadir `https://karloz198.github.io/chat-bot/` a las "OAuth Redirect URLs".
+                </p>
+                <hr>
+                <label for="twitchAccessTokenInput">Twitch Access Token (Opcional):</label>
+                <input type="text" id="twitchAccessTokenInput" placeholder="Pega tu Access Token de Twitch">
+                <button id="saveTwitchAccessTokenBtn" class="modern-button small-button">Guardar Access Token</button>
+                <p class="warning-message">
+                    **Advertencia:** Los Access Tokens de Twitch expiran (normalmente en horas). Esta opción es para tokens temporales.
+                    Si no pegas uno aquí, el sistema intentará obtener uno automáticamente al "Conectar".
+                    <a href="#how-to-get-manual-token" class="small-text">¿Cómo obtener un Access Token manual?</a>
+                </p>
+                <hr>
+
                 <button id="connectTwitchBtn" class="modern-button">Conectar con Twitch</button>
                 <p id="twitchStatus" class="status-message"></p>
                 <hr>
@@ -27,7 +46,7 @@
                     <ol>
                         <li>Genera una API Key específica para esta aplicación.</li>
                         <li>Restringe la API Key para que solo funcione con la API de "Generative Language API".</li>
-                        <li>Considera restringir la API Key a tu dominio `https://karloz198.github.io/` (y `http://127.0.0.1` o `http://localhost` para pruebas locales).</li>
+                        <li>Considera restringir la API Key a tu dominio `https://karloz198.github.io/chat-bot/` (y `http://127.0.0.1` o `http://localhost` para pruebas locales).</li>
                     </ol>
                     Puedes obtener tu API Key y gestionarla en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio (aistudio.google.com/app/apikey)</a>.
                     Monitorea el uso y establece límites de facturación en tu Google Cloud Console si lo deseas.
@@ -84,7 +103,30 @@
         </div>
     </div>
 
-    <script src="**dist/tmi.min.js**"></script>
+    <div id="how-to-get-manual-token" style="margin-top: 40px; padding: 20px; border-top: 1px solid #ccc;">
+        <h3>¿Cómo obtener un Access Token de Twitch manualmente?</h3>
+        <p>Esta es una forma avanzada y los tokens expiran. Para uso a largo plazo, el proceso de "Conectar con Twitch" es más recomendable.</p>
+        <ol>
+            <li>**Asegúrate de que tu Client ID de Twitch esté configurado en el campo de arriba.**</li>
+            <li>**Abre esta URL en tu navegador (REEMPLAZA `TU_CLIENT_ID` con tu Client ID real):**
+                <pre><code>https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=TU_CLIENT_ID&redirect_uri=https://karloz198.github.io/chat-bot/&scope=chat:read+chat:edit+user:read:email+channel:moderate</code></pre>
+                <p>Aquí tienes un enlace de ejemplo para copiar y pegar (¡recuerda cambiar el Client ID!):</p>
+                <p>
+                    <a href="#" id="manualTokenLink">Haz clic aquí para generar tu token (¡cambia TU_CLIENT_ID en el código!)</a>
+                    <br>
+                    *(Desarrollador: Este enlace necesita ser dinámico con el Client ID introducido. Por ahora, cópialo manualmente)*
+                </p>
+            </li>
+            <li>**Twitch te pedirá autorización.** Haz clic en "Authorize" (Autorizar).</li>
+            <li>**Serás redirigido a tu página `https://karloz198.github.io/chat-bot/`**, pero la URL en la barra de direcciones contendrá tu Access Token en el "hash" (después del `#`).
+                <br>
+                **Ejemplo de URL:** `https://karloz198.github.io/chat-bot/#access_token=abcdefg123456789...&scope=chat:read...`
+            </li>
+            <li>**Copia el valor después de `access_token=` y antes del siguiente `&`**. Ese es tu Access Token. Pégalo en el campo "Twitch Access Token (Opcional)" de esta aplicación.</li>
+        </ol>
+    </div>
+
+    <script src="dist/tmi.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

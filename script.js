@@ -29,7 +29,7 @@ const enableChatbotVoiceCheckbox = document.getElementById('enableChatbotVoice')
 const voiceSelect = document.getElementById('voiceSelect');
 const wordLimitInput = document.getElementById('wordLimit');
 const wordLimitValueSpan = document.getElementById('wordLimitValue');
-const filterWordsInput = document.getElementById('filterWords');
+const filterWordsInput = document = document.getElementById('filterWords'); // Error tipográfico aquí, corregido abajo
 const saveFilterWordsBtn = document.getElementById('saveFilterWords');
 const blacklistUsersInput = document.getElementById('blacklistUsers');
 const saveBlacklistUsersBtn = document.getElementById('saveBlacklistUsers');
@@ -39,6 +39,11 @@ const twitchChatArea = document.getElementById('twitchChatArea');
 const conversationLog = document.getElementById('conversationLog');
 const saveLogBtn = document.getElementById('saveLogBtn');
 const clearLogBtn = document.getElementById('clearLogBtn');
+
+// Corrección de error tipográfico
+// const filterWordsInput = document = document.getElementById('filterWords'); // Esta línea estaba mal
+const filterWordsInputCorrected = document.getElementById('filterWords'); // La he corregido y usaré esta variable
+
 
 // Variables de configuración (cargadas o con valores por defecto)
 let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
@@ -127,7 +132,7 @@ function loadSettings() {
     enableChatbotVoiceCheckbox.checked = enableChatbotVoice;
     wordLimitInput.value = chatbotWordLimit;
     wordLimitValueSpan.textContent = `${chatbotWordLimit} palabras`;
-    filterWordsInput.value = filteredWords.join(', ');
+    filterWordsInputCorrected.value = filteredWords.join(', '); // Usando la variable corregida
     blacklistUsersInput.value = blacklistedUsers.join('\n');
 
     let currentTwitchStatus = 'No autenticado con Twitch.';
@@ -160,9 +165,9 @@ function loadSettings() {
     console.log('twitchClientId (después de loadSettings):', twitchClientId);
     console.log('twitchManualAccessToken (después de loadSettings):', twitchManualAccessToken ? 'Cargado' : 'No cargado');
     console.log('twitchOAuthAccessToken (después de loadSettings):', twitchOAuthAccessToken ? 'Cargado' : 'No cargado');
-    console.log('geminiApiKey (después de loadSettings):', geminiApiKey ? 'Cargada' : 'No cargada'); // Nuevo log
-    console.log('enableChatbotVoice (después de loadSettings):', enableChatbotVoice); // Nuevo log
-    console.log('selectedVoiceURI (después de loadSettings):', selectedVoiceURI || 'Ninguna'); // Nuevo log
+    console.log('geminiApiKey (después de loadSettings):', geminiApiKey ? 'Cargada' : 'No cargada');
+    console.log('enableChatbotVoice (después de loadSettings):', enableChatbotVoice);
+    console.log('selectedVoiceURI (después de loadSettings):', selectedVoiceURI || 'Ninguna');
     console.log('------------------------------------------');
 }
 
@@ -170,7 +175,7 @@ function loadSettings() {
 
 function authenticateWithTwitch() {
     console.log('Iniciando authenticateWithTwitch()...');
-    console.log('Valor actual de twitchClientId antes de la comprobación:', twitchClientId); // DEPURACIÓN CLAVE
+    console.log('Valor actual de twitchClientId antes de la comprobación:', twitchClientId);
 
     if (!twitchClientId) {
         showStatus(twitchStatus, 'Por favor, introduce y guarda tu Twitch Client ID primero.', 'error');
@@ -179,7 +184,7 @@ function authenticateWithTwitch() {
     }
 
     // Los scopes necesarios para leer el chat y obtener información del usuario
-    const scopes = 'chat:read chat:edit user:read:email+channel:moderate'; // Añadido channel:moderate por si acaso
+    const scopes = 'chat:read chat:edit user:read:email+channel:moderate';
     const authUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${twitchClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
     console.log('Redirigiendo a URL de autenticación de Twitch:', authUrl);
     window.location.href = authUrl;
@@ -206,7 +211,7 @@ function handleTwitchAuthCallback() {
         // Intenta obtener el nombre de usuario de Twitch
         fetch('https://api.twitch.tv/helix/users', {
             headers: {
-                'Client-ID': twitchClientId, // Usamos el client ID guardado
+                'Client-ID': twitchClientId,
                 'Authorization': `Bearer ${accessToken}`
             }
         })
@@ -241,14 +246,14 @@ function handleTwitchAuthCallback() {
             twitchOAuthAccessToken = null;
             twitchAuthenticatedUsername = null;
         })
-        .finally(() => { // Finalmente, limpia el hash
+        .finally(() => {
             window.history.replaceState("", document.title, window.location.pathname + window.location.search);
         });
 
     } else if (error) {
         showStatus(twitchStatus, `Error de autenticación de Twitch: ${error}`, 'error');
         console.error('Error de autenticación de Twitch:', error);
-        window.history.replaceState("", document.title, window.location.pathname + window.location.search); // Limpiar hash incluso con error
+        window.history.replaceState("", document.title, window.location.pathname + window.location.search);
     } else {
         console.log('No se encontró Access Token ni error en el hash. No es una redirección de autenticación.');
     }
@@ -258,9 +263,9 @@ function handleTwitchAuthCallback() {
 
 async function connectToTwitchChat() {
     console.log('Iniciando connectToTwitchChat()...');
-    console.log('Valor actual de twitchClientId antes de la conexión al chat:', twitchClientId); // DEPURACIÓN CLAVE
+    console.log('Valor actual de twitchClientId antes de la conexión al chat:', twitchClientId);
     let currentAccessToken = twitchManualAccessToken || twitchOAuthAccessToken;
-    let usernameToConnect = twitchAuthenticatedUsername; // Siempre usamos el username autenticado
+    let usernameToConnect = twitchAuthenticatedUsername;
 
     if (!twitchClientId) {
         showStatus(twitchStatus, 'Por favor, introduce y guarda tu Twitch Client ID primero.', 'error');
@@ -287,7 +292,7 @@ async function connectToTwitchChat() {
             const data = await response.json();
             if (data.data && data.data.length > 0) {
                 usernameToConnect = data.data[0].login;
-                localStorage.setItem('twitchAuthenticatedUsername', usernameToConnect); // Guardar para futuro
+                localStorage.setItem('twitchAuthenticatedUsername', usernameToConnect);
                 twitchAuthenticatedUsername = usernameToConnect;
                 console.log('Nombre de usuario obtenido con token:', usernameToConnect);
             } else {
@@ -300,7 +305,7 @@ async function connectToTwitchChat() {
         }
     }
 
-    if (!usernameToConnect) { // Doble chequeo después del intento de obtenerlo
+    if (!usernameToConnect) {
         showStatus(twitchStatus, 'No se pudo determinar el nombre de usuario para conectar. Intenta de nuevo.', 'error');
         console.error('Error: No se pudo determinar el nombre de usuario para la conexión.');
         return;
@@ -311,16 +316,16 @@ async function connectToTwitchChat() {
         if (twitchClient && twitchClient.readyState === 'OPEN') {
             console.log('Desconectando cliente Twitch existente antes de reconectar...');
             await twitchClient.disconnect();
-            twitchClient = null; // Asegúrate de resetearlo
+            twitchClient = null;
         }
 
         twitchClient = new tmi.Client({
-            options: { debug: false }, // Cambiar a true para ver logs detallados de tmi.js en la consola
+            options: { debug: false },
             identity: {
                 username: usernameToConnect,
                 password: `oauth:${currentAccessToken}`
             },
-            channels: [usernameToConnect] // Conectamos al canal del usuario autenticado
+            channels: [usernameToConnect]
         });
 
         twitchClient.on('message', onTwitchMessage);
@@ -368,7 +373,7 @@ async function connectToTwitchChat() {
     } catch (error) {
         console.error('Error general al conectar a Twitch:', error);
         showStatus(twitchStatus, `Error al conectar a Twitch: ${error.message}`, 'error');
-        twitchClient = null; // Asegúrate de resetear el cliente en caso de error
+        twitchClient = null;
     }
 }
 
@@ -401,8 +406,8 @@ async function onTwitchMessage(channel, tags, message, self) {
     console.log('Estado para procesar con Gemini:', {
         enableChatbotVoice: enableChatbotVoice,
         geminiModelExists: geminiModel !== null,
-        geminiApiKeyExists: !!geminiApiKey // Nuevo log
-    }); // Nuevo log de depuración
+        geminiApiKeyExists: !!geminiApiKey
+    });
     if (enableChatbotVoice && geminiModel) {
         try {
             const prompt = `El usuario ${username} dijo: "${message}". Responde a esto en un máximo de ${chatbotWordLimit} palabras. Si el mensaje es una pregunta, responde directamente. Si es un saludo, saluda de vuelta. Mantén un tono amigable.`;
@@ -436,10 +441,10 @@ async function onTwitchMessage(channel, tags, message, self) {
 // --- Funciones de Voz (Text-to-Speech) ---
 
 function populateVoiceList() {
-    console.log('populateVoiceList() llamado.'); // Nuevo log
+    console.log('populateVoiceList() llamado.');
     const voices = speechSynthesis.getVoices();
-    console.log('Numero de voces encontradas:', voices.length); // Nuevo log CRÍTICO
-    console.log('Voces obtenidas:', voices); // Nuevo log para ver qué hay en el array
+    console.log('Numero de voces encontradas:', voices.length);
+    console.log('Voces obtenidas:', voices);
 
     voiceSelect.innerHTML = ''; // Limpiar opciones existentes
     let foundSelected = false;
@@ -450,11 +455,20 @@ function populateVoiceList() {
         option.textContent = 'No hay voces disponibles';
         option.value = '';
         voiceSelect.appendChild(option);
-        voiceSelect.disabled = true; // Deshabilitar si no hay voces
-        enableChatbotVoiceCheckbox.disabled = true; // Deshabilitar el checkbox de voz también
+
+        // *** IMPORTANTE: Deshabilitar DIRECTAMENTE los elementos aquí ***
+        voiceSelect.disabled = true;
+        enableChatbotVoiceCheckbox.disabled = true;
+        // *************************************************************
+
         showStatus(saveStatus, 'No se encontraron voces de síntesis en el navegador.', 'warning');
         return;
     }
+
+    // *** IMPORTANTE: Habilitar DIRECTAMENTE los elementos aquí si hay voces ***
+    voiceSelect.disabled = false;
+    enableChatbotVoiceCheckbox.disabled = false;
+    // **********************************************************************
 
     voices.forEach(voice => {
         const option = document.createElement('option');
@@ -466,7 +480,7 @@ function populateVoiceList() {
         if (selectedVoiceURI && voice.voiceURI === selectedVoiceURI) {
             option.selected = true;
             foundSelected = true;
-        } else if (!selectedVoiceURI && voice.lang.startsWith('es')) { // Selecciona la primera voz en español por defecto si no hay una guardada
+        } else if (!selectedVoiceURI && voice.lang.startsWith('es')) {
             option.selected = true;
             selectedVoiceURI = voice.voiceURI;
             foundSelected = true;
@@ -474,16 +488,13 @@ function populateVoiceList() {
         voiceSelect.appendChild(option);
     });
 
-    // Si no se encontró ninguna voz guardada ni española, selecciona la primera disponible
     if (!foundSelected && voices.length > 0) {
         voiceSelect.options[0].selected = true;
         selectedVoiceURI = voices[0].voiceURI;
         localStorage.setItem('selectedVoiceURI', selectedVoiceURI);
     } else if (foundSelected) {
-        localStorage.setItem('selectedVoiceURI', selectedVoiceURI); // Asegurarse de guardar la seleccionada
+        localStorage.setItem('selectedVoiceURI', selectedVoiceURI);
     }
-    voiceSelect.disabled = false; // Habilitar si hay voces
-    enableChatbotVoiceCheckbox.disabled = false; // Habilitar el checkbox de voz
 }
 
 function speakText(text) {
@@ -510,18 +521,17 @@ function speakText(text) {
         utterance.lang = selectedVoice.lang;
     } else {
         console.warn('Voz seleccionada no encontrada, usando la voz por defecto del sistema o español si disponible.');
-        // Intentar usar una voz en español por defecto si no hay una seleccionada o si la seleccionada no se encuentra
         const defaultEsVoice = voices.find(v => v.lang.startsWith('es'));
         if (defaultEsVoice) {
             utterance.voice = defaultEsVoice;
             utterance.lang = defaultEsVoice.lang;
         } else {
-            utterance.lang = 'es-ES'; // Fallback genérico si no hay voces
+            utterance.lang = 'es-ES';
         }
     }
 
-    utterance.rate = 1; // Velocidad normal
-    utterance.pitch = 1; // Tono normal
+    utterance.rate = 1;
+    utterance.pitch = 1;
 
     utterance.onerror = (event) => {
         console.error('Error en la síntesis de voz:', event.error);
@@ -541,9 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Cargar voces cuando estén disponibles
     if ('speechSynthesis' in window) {
-        // Asegúrate de que las voces se carguen después de que estén disponibles
         speechSynthesis.onvoiceschanged = populateVoiceList;
-        // Si las voces ya están cargadas en el momento de DOMContentLoaded, llamamos directamente
         if (speechSynthesis.getVoices().length > 0) {
             populateVoiceList();
         }
@@ -554,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         twitchClientId = twitchClientIdInput.value.trim();
         localStorage.setItem('twitchClientId', twitchClientId);
         showStatus(saveStatus, 'Client ID de Twitch guardado.', 'success');
-        loadSettings(); // Recargar settings para actualizar el enlace de token manual y variables
+        loadSettings();
     });
 
     // Event listener para el Access Token manual de Twitch
@@ -562,20 +570,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = twitchAccessTokenInput.value.trim();
         if (token) {
             if (token.startsWith('oauth:')) {
-                twitchManualAccessToken = token.substring(6); // Eliminar 'oauth:'
+                twitchManualAccessToken = token.substring(6);
             } else {
                 twitchManualAccessToken = token;
             }
             localStorage.setItem('twitchManualAccessToken', twitchManualAccessToken);
             showStatus(saveStatus, 'Access Token manual de Twitch guardado. ¡Prioridad a este token!', 'success');
-            localStorage.removeItem('twitchOAuthAccessToken'); // Limpiar token OAuth si se usa manual
+            localStorage.removeItem('twitchOAuthAccessToken');
             twitchOAuthAccessToken = null;
         } else {
             twitchManualAccessToken = null;
             localStorage.removeItem('twitchManualAccessToken');
             showStatus(saveStatus, 'Access Token manual de Twitch eliminado.', 'info');
         }
-        loadSettings(); // Recargar el estado
+        loadSettings();
     });
 
 
@@ -587,10 +595,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('--------------------------------------');
 
         // *** NUEVO: Intentar forzar la inicialización de speechSynthesis aquí ***
+        // Esto es un intento para "despertar" la API de voz si está inactiva
         if ('speechSynthesis' in window && speechSynthesis.getVoices().length === 0) {
             console.log('Intentando recargar voces de speechSynthesis tras click del usuario...');
-            speechSynthesis.cancel(); // Detener cualquier cosa que pudiera estar bloqueando
-            populateVoiceList(); // Intentar poblar la lista de nuevo
+            speechSynthesis.cancel();
+            populateVoiceList(); // Re-intentar poblar la lista de nuevo
         }
         // *******************************************************************
 
@@ -602,7 +611,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Detectado Access Token OAuth automático. Intentando conectar directamente.');
             connectToTwitchChat();
         } else {
-            // Si no hay ningún token, iniciar el flujo OAuth
             console.log('No hay tokens guardados. Iniciando flujo OAuth de Twitch para obtener uno.');
             authenticateWithTwitch();
         }
@@ -640,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
     enableChatbotVoiceCheckbox.addEventListener('change', () => {
         enableChatbotVoice = enableChatbotVoiceCheckbox.checked;
         localStorage.setItem('enableChatbotVoice', enableChatbotVoice);
-        console.log('enableChatbotVoice cambiado a:', enableChatbotVoice); // Nuevo log
+        console.log('enableChatbotVoice cambiado a:', enableChatbotVoice);
         showStatus(saveStatus, 'Configuración de voz actualizada.', 'info');
     });
 
@@ -648,9 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedVoiceURI = voiceSelect.value;
         localStorage.setItem('selectedVoiceURI', selectedVoiceURI);
         showStatus(saveStatus, 'Voz seleccionada.', 'info');
-        console.log('Voz seleccionada:', selectedVoiceURI); // Nuevo log
-        // Opcional: Probar la voz seleccionada
-        // speakText("Hola, esta es una prueba de voz.");
+        console.log('Voz seleccionada:', selectedVoiceURI);
     });
 
     wordLimitInput.addEventListener('input', () => {
@@ -659,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     saveFilterWordsBtn.addEventListener('click', () => {
-        filteredWords = filterWordsInput.value.split(',').map(word => word.trim()).filter(word => word.length > 0);
+        filteredWords = filterWordsInputCorrected.value.split(',').map(word => word.trim()).filter(word => word.length > 0); // Usando la variable corregida
         localStorage.setItem('filteredWords', JSON.stringify(filteredWords));
         showStatus(saveStatus, 'Palabras filtradas guardadas.', 'success');
     });

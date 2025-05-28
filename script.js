@@ -160,6 +160,9 @@ function loadSettings() {
     console.log('twitchClientId (después de loadSettings):', twitchClientId);
     console.log('twitchManualAccessToken (después de loadSettings):', twitchManualAccessToken ? 'Cargado' : 'No cargado');
     console.log('twitchOAuthAccessToken (después de loadSettings):', twitchOAuthAccessToken ? 'Cargado' : 'No cargado');
+    console.log('geminiApiKey (después de loadSettings):', geminiApiKey ? 'Cargada' : 'No cargada'); // Nuevo log
+    console.log('enableChatbotVoice (después de loadSettings):', enableChatbotVoice); // Nuevo log
+    console.log('selectedVoiceURI (después de loadSettings):', selectedVoiceURI || 'Ninguna'); // Nuevo log
     console.log('------------------------------------------');
 }
 
@@ -395,6 +398,11 @@ async function onTwitchMessage(channel, tags, message, self) {
     }
 
     // Procesar con Gemini si la voz del chatbot está activada y el modelo está inicializado
+    console.log('Estado para procesar con Gemini:', {
+        enableChatbotVoice: enableChatbotVoice,
+        geminiModelExists: geminiModel !== null,
+        geminiApiKeyExists: !!geminiApiKey // Nuevo log
+    }); // Nuevo log de depuración
     if (enableChatbotVoice && geminiModel) {
         try {
             const prompt = `El usuario <span class="math-inline">\{username\} dijo\: "</span>{message}". Responde a esto en un máximo de ${chatbotWordLimit} palabras. Si el mensaje es una pregunta, responde directamente. Si es un saludo, saluda de vuelta. Mantén un tono amigable.`;
@@ -419,6 +427,8 @@ async function onTwitchMessage(channel, tags, message, self) {
         } catch (error) {
             console.error('Error al comunicarse con Gemini AI:', error);
             appendToLog(`[ERROR AI]: ${error.message}`);
+            // Si hay un error con Gemini, desactiva la voz temporalmente o alerta
+            showStatus(saveStatus, `Error de Gemini AI: ${error.message}. Revisar API Key.`, 'error');
         }
     }
 }
@@ -429,6 +439,18 @@ function populateVoiceList() {
     const voices = speechSynthesis.getVoices();
     voiceSelect.innerHTML = ''; // Limpiar opciones existentes
     let foundSelected = false;
+
+    if (voices.length === 0) {
+        console.warn('No se encontraron voces de síntesis de voz en este navegador.');
+        const option = document.createElement('option');
+        option.textContent = 'No hay voces disponibles';
+        option.value = '';
+        voiceSelect.appendChild(option);
+        voiceSelect.disabled = true; // Deshabilitar si no hay voces
+        enableChatbotVoiceCheckbox.disabled = true; // Deshabilitar el checkbox de voz también
+        showStatus(saveStatus, 'No se encontraron voces de síntesis en el navegador.', 'warning');
+        return;
+    }
 
     voices.forEach(voice => {
         const option = document.createElement('option');
@@ -456,27 +478,53 @@ function populateVoiceList() {
     } else if (foundSelected) {
         localStorage.setItem('selectedVoiceURI', selectedVoiceURI); // Asegurarse de guardar la seleccionada
     }
+    voiceSelect.disabled = false; // Habilitar si hay voces
+    enableChatbotVoiceCheckbox.disabled = false; // Habilitar el checkbox de voz
 }
 
 function speakText(text) {
-    if (!enableChatbotVoice) return;
-    if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        const voices = speechSynthesis.getVoices();
-        const selectedVoice = voices.find(voice => voice.voiceURI === selectedVoiceURI);
-
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
-            utterance.lang = selectedVoice.lang;
-        } else {
-            console.warn('Voz seleccionada no encontrada, usando la voz por defecto del sistema.');
-            utterance.lang = 'es-ES'; // Valor por defecto si no se encuentra voz
-        }
-
-        speechSynthesis.speak(utterance);
-    } else {
-        console.warn('SpeechSynthesis no está soportado en este navegador.');
+    if (!enableChatbotVoice) {
+        console.log('SpeakText: Voz del chatbot deshabilitada.');
+        return;
     }
+    if (!('speechSynthesis' in window)) {
+        console.warn('SpeechSynthesis no está soportado en este navegador.');
+        return;
+    }
+    if (speechSynthesis.speaking) {
+        console.log('SpeechSynthesis: Ya está hablando, omitiendo nueva lectura.');
+        // Puedes añadir una cola aquí si quieres que lea todo
+        return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+    const selectedVoice = voices.find(voice => voice.voiceURI === selectedVoiceURI);
+
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        utterance.lang = selectedVoice.lang;
+    } else {
+        console.warn('Voz seleccionada no encontrada, usando la voz por defecto del sistema o español si disponible.');
+        // Intentar usar una voz en español por defecto si no hay una seleccionada o si la seleccionada no se encuentra
+        const defaultEsVoice = voices.find(v => v.lang.startsWith('es'));
+        if (defaultEsVoice) {
+            utterance.voice = defaultEsVoice;
+            utterance.lang = defaultEsVoice.lang;
+        } else {
+            utterance.lang = 'es-ES'; // Fallback genérico si no hay voces en español
+        }
+    }
+
+    utterance.rate = 1; // Velocidad normal
+    utterance.pitch = 1; // Tono normal
+
+    utterance.onerror = (event) => {
+        console.error('Error en la síntesis de voz:', event.error);
+    };
+
+    speechSynthesis.speak(utterance);
+    console.log('SpeakText: Iniciando lectura de:', text);
 }
 
 // --- Inicialización y Event Listeners ---
@@ -489,8 +537,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Cargar voces cuando estén disponibles
     if ('speechSynthesis' in window) {
+        // Asegúrate de que las voces se carguen después de que estén disponibles
         speechSynthesis.onvoiceschanged = populateVoiceList;
-        // Si las voces ya están cargadas, populamos la lista de inmediato
+        // Si las voces ya están cargadas en el momento de DOMContentLoaded, llamamos directamente
         if (speechSynthesis.getVoices().length > 0) {
             populateVoiceList();
         }
@@ -508,7 +557,6 @@ document.addEventListener('DOMContentLoaded', () => {
     saveTwitchAccessTokenBtn.addEventListener('click', () => {
         const token = twitchAccessTokenInput.value.trim();
         if (token) {
-            // Verificar si el token es un OAuth token completo (ej. oauth:abc...)
             if (token.startsWith('oauth:')) {
                 twitchManualAccessToken = token.substring(6); // Eliminar 'oauth:'
             } else {
@@ -516,9 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             localStorage.setItem('twitchManualAccessToken', twitchManualAccessToken);
             showStatus(saveStatus, 'Access Token manual de Twitch guardado. ¡Prioridad a este token!', 'success');
-            // Opcional: limpiar el OAuth token automático si se guarda uno manual
-            // Esto asegura que el token manual sea el único en uso
-            localStorage.removeItem('twitchOAuthAccessToken');
+            localStorage.removeItem('twitchOAuthAccessToken'); // Limpiar token OAuth si se usa manual
             twitchOAuthAccessToken = null;
         } else {
             twitchManualAccessToken = null;
@@ -531,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     connectTwitchBtn.addEventListener('click', () => {
         console.log('--- Click en "Conectar con Twitch" ---');
-        console.log('Valor de twitchClientId en el momento del click:', twitchClientId); // **DEPURACIÓN CRÍTICA**
+        console.log('Valor de twitchClientId en el momento del click:', twitchClientId);
         console.log('Valor de twitchManualAccessToken en el momento del click:', twitchManualAccessToken ? 'Presente' : 'Ausente');
         console.log('Valor de twitchOAuthAccessToken en el momento del click:', twitchOAuthAccessToken ? 'Presente' : 'Ausente');
         console.log('--------------------------------------');
@@ -554,19 +600,18 @@ document.addEventListener('DOMContentLoaded', () => {
         geminiApiKey = geminiApiKeyInput.value.trim();
         localStorage.setItem('geminiApiKey', geminiApiKey);
         if (geminiApiKey) {
-            // Inicializar el modelo Gemini
             if (window['@google/generative-language']) {
                 const { GoogleGenerativeLanguageCloud } = window['@google/generative-language'];
                 try {
                     geminiModel = new GoogleGenerativeLanguageCloud.GenerativeModel({
                         apiKey: geminiApiKey,
-                        model: "gemini-pro" // Puedes especificar el modelo aquí
+                        model: "gemini-pro"
                     });
                     showStatus(saveStatus, 'API Key de Gemini guardada e inicializada.', 'success');
-                    console.log('Gemini AI Model initialized.');
+                    console.log('Gemini AI Model initialized with new API Key.');
                 } catch (e) {
                     showStatus(saveStatus, `Error inicializando Gemini: ${e.message}`, 'error');
-                    console.error('Error initializing Gemini model:', e);
+                    console.error('Error initializing Gemini model with new API Key:', e);
                     geminiModel = null;
                 }
             } else {
@@ -583,6 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
     enableChatbotVoiceCheckbox.addEventListener('change', () => {
         enableChatbotVoice = enableChatbotVoiceCheckbox.checked;
         localStorage.setItem('enableChatbotVoice', enableChatbotVoice);
+        console.log('enableChatbotVoice cambiado a:', enableChatbotVoice); // Nuevo log
         showStatus(saveStatus, 'Configuración de voz actualizada.', 'info');
     });
 
@@ -590,6 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedVoiceURI = voiceSelect.value;
         localStorage.setItem('selectedVoiceURI', selectedVoiceURI);
         showStatus(saveStatus, 'Voz seleccionada.', 'info');
+        console.log('Voz seleccionada:', selectedVoiceURI); // Nuevo log
         // Opcional: Probar la voz seleccionada
         // speakText("Hola, esta es una prueba de voz.");
     });

@@ -179,7 +179,7 @@ function authenticateWithTwitch() {
     }
 
     // Los scopes necesarios para leer el chat y obtener información del usuario
-    const scopes = 'chat:read chat:edit user:read:email channel:moderate'; // Añadido channel:moderate por si acaso
+    const scopes = 'chat:read chat:edit user:read:email+channel:moderate'; // Añadido channel:moderate por si acaso
     const authUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${twitchClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
     console.log('Redirigiendo a URL de autenticación de Twitch:', authUrl);
     window.location.href = authUrl;
@@ -516,7 +516,7 @@ function speakText(text) {
             utterance.voice = defaultEsVoice;
             utterance.lang = defaultEsVoice.lang;
         } else {
-            utterance.lang = 'es-ES'; // Fallback genérico si no hay voces en español
+            utterance.lang = 'es-ES'; // Fallback genérico si no hay voces
         }
     }
 
@@ -585,6 +585,14 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Valor de twitchManualAccessToken en el momento del click:', twitchManualAccessToken ? 'Presente' : 'Ausente');
         console.log('Valor de twitchOAuthAccessToken en el momento del click:', twitchOAuthAccessToken ? 'Presente' : 'Ausente');
         console.log('--------------------------------------');
+
+        // *** NUEVO: Intentar forzar la inicialización de speechSynthesis aquí ***
+        if ('speechSynthesis' in window && speechSynthesis.getVoices().length === 0) {
+            console.log('Intentando recargar voces de speechSynthesis tras click del usuario...');
+            speechSynthesis.cancel(); // Detener cualquier cosa que pudiera estar bloqueando
+            populateVoiceList(); // Intentar poblar la lista de nuevo
+        }
+        // *******************************************************************
 
         // Si hay un token manual, lo usamos. Si no, intentamos el OAuth.
         if (twitchManualAccessToken) {

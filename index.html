@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot de Voz para Twitch</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@google/generative-language@0.0.1"></script>
 </head>
 <body>
     <div class="container">
@@ -26,7 +27,7 @@
                 <input type="text" id="twitchAccessTokenInput" placeholder="Pega tu Access Token de Twitch">
                 <button id="saveTwitchAccessTokenBtn" class="modern-button small-button">Guardar Access Token</button>
                 <p class="warning-message">
-                    **Advertencia:** Los Access Tokens de Twitch expiran (normalmente en horas). Esta opción es para tokens temporales.
+                    <strong>Advertencia:</strong> Los Access Tokens de Twitch expiran (normalmente en horas). Esta opción es para tokens temporales.
                     Si no pegas uno aquí, el sistema intentará obtener uno automáticamente al "Conectar".
                     <a href="#how-to-get-manual-token" class="small-text">¿Cómo obtener un Access Token manual?</a>
                 </p>
@@ -89,7 +90,7 @@
             <div class="chat-display">
                 <h2>Chat del Directo</h2>
                 <div id="twitchChatArea" class="chat-messages">
-                    </div>
+                </div>
             </div>
 
             <div class="conversation-log">
